@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taskora — One App. Every Service. Every Need.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#0E8F57;
+    --green-dark:#065F46;
+    --green-deep:#04382B;
+    --black:#0B0D0C;
+    --white:#FFFFFF;
+    --paper:#F7F8F6;
+    --paper-2:#EDF2EE;
+    --gold:#D4AF37;
+    --ink:#12201A;
+    --line: rgba(11,13,12,0.12);
+    --line-light: rgba(255,255,255,0.16);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    line-height:1.55;
+    overflow-x:hidden;
+    font-size:15.5px;
+  }
+  h1,h2,h3,.display{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    line-height:1.05;
+    color:var(--black);
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; letter-spacing:0.02em; }
+  a{color:inherit; text-decoration:none;}
+  ul{list-style:none;}
+  .wrap{max-width:1200px; margin:0 auto; padding:0 32px;}
+  img,svg{display:block; max-width:100%;}
+
+  /* ---------- SHARED ---------- */
+  .tag{
+    font-family:'IBM Plex Mono', monospace; font-size:12px;
+    text-transform:uppercase; letter-spacing:0.1em; color:var(--green);
+    display:flex; align-items:center; gap:9px; margin-bottom:14px; font-weight:600;
+  }
+  .tag::before{content:""; width:22px; height:2px; background:var(--gold);}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:13px 26px;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600; font-size:13px; text-transform:uppercase; letter-spacing:0.04em;
+    border:1.5px solid var(--black);
+    border-radius:3px;
+    cursor:pointer;
+    transition:transform .15s ease, background .15s ease, color .15s ease, border-color .15s ease;
+    background:transparent;
+  }
+  .btn-fill{background:var(--green); color:var(--white); border-color:var(--green);}
+  .btn-fill:hover{background:var(--green-dark); border-color:var(--green-dark); transform:translateY(-2px);}
+  .btn-gold{background:var(--gold); color:var(--black); border-color:var(--gold);}
+  .btn-gold:hover{background:#c19b28; border-color:#c19b28; transform:translateY(-2px);}
+  .btn-ghost{color:var(--black);}
+  .btn-ghost:hover{background:var(--black); color:var(--white); transform:translateY(-2px);}
+  .btn-mini{padding:9px 16px; font-size:11px;}
+
+  section{padding:96px 0;}
+  .section-head{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    margin-bottom:44px; gap:24px; flex-wrap:wrap;
+  }
+  .section-head h2{font-size:clamp(28px,3.6vw,44px);}
+  .section-head p{max-width:380px; font-size:14.5px; color:rgba(18,32,26,0.62);}
+
+  /* ---------- NAV ---------- */
+  nav{position:sticky; top:0; z-index:100; background:var(--white); border-bottom:1px solid var(--line);}
+  .nav-inner{max-width:1200px; margin:0 auto; padding:14px 32px; display:flex; align-items:center; justify-content:space-between;}
+  .logo{display:flex; align-items:center; gap:10px;}
+  .logo img{height:38px; width:auto;}
+  .logo .word{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:20px; letter-spacing:-0.01em; color:var(--black);}
+  .powered-by{font-family:'IBM Plex Mono', monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:rgba(11,13,12,0.4);}
+  .nav-links{display:flex; gap:30px; align-items:center;}
+  .nav-links a{font-size:13.5px; font-weight:600; color:var(--ink);}
+  .nav-links a:hover{color:var(--green);}
+
+  .promo-strip{
+    background:var(--gold); color:var(--black);
+    text-align:center; padding:9px 20px;
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; font-weight:600;
+    text-transform:uppercase; letter-spacing:0.03em;
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    background:
+      radial-gradient(circle at 85% 20%, rgba(212,175,55,0.14), transparent 45%),
+      linear-gradient(160deg, var(--green-dark), var(--green-deep));
+    color:var(--white); position:relative; overflow:hidden;
+  }
+  .hero::before{
+    content:""; position:absolute; inset:0; opacity:0.08;
+    background-image:
+      linear-gradient(30deg, var(--white) 12%, transparent 12.5%, transparent 87%, var(--white) 87.5%, var(--white)),
+      linear-gradient(150deg, var(--white) 12%, transparent 12.5%, transparent 87%, var(--white) 87.5%, var(--white)),
+      linear-gradient(30deg, var(--white) 12%, transparent 12.5%, transparent 87%, var(--white) 87.5%, var(--white)),
+      linear-gradient(150deg, var(--white) 12%, transparent 12.5%, transparent 87%, var(--white) 87.5%, var(--white));
+    background-size:64px 112px; background-position:0 0, 0 0, 32px 56px, 32px 56px;
+    pointer-events:none;
+  }
+  .hero-grid{
+    max-width:1200px; margin:0 auto; padding:76px 32px 0; position:relative; z-index:1;
+    display:grid; grid-template-columns:1.15fr 0.85fr; gap:48px; align-items:center;
+  }
+  .hero .tag{color:var(--gold);}
+  .hero .tag::before{background:var(--white);}
+  .hero h1{font-size:clamp(40px,5.6vw,68px); color:var(--white); margin-bottom:20px;}
+  .hero h1 em{font-style:normal; color:var(--gold);}
+  .hero p.lede{font-size:17px; max-width:460px; color:rgba(255,255,255,0.8); margin-bottom:30px;}
+  .hero-ctas{display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap;}
+  .hero .btn-ghost{border-color:rgba(255,255,255,0.4); color:var(--white);}
+  .hero .btn-ghost:hover{background:var(--white); color:var(--green-deep);}
+  .hero-mini-stats{display:flex; gap:28px; margin-top:40px; padding-top:28px; border-top:1px solid rgba(255,255,255,0.18); flex-wrap:wrap;}
+  .hero-mini-stats div .n{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:22px; color:var(--gold);}
+  .hero-mini-stats div .l{font-family:'IBM Plex Mono', monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:rgba(255,255,255,0.65);}
+
+  /* phone mockup */
+  .phone{
+    background:var(--white); border-radius:26px; padding:14px;
+    box-shadow:0 30px 70px rgba(0,0,0,0.35); position:relative; z-index:1;
+    border:6px solid var(--black);
+  }
+  .phone-screen{background:var(--paper); border-radius:14px; padding:16px; color:var(--ink);}
+  .phone-top{display:flex; align-items:center; gap:8px; margin-bottom:14px;}
+  .phone-top img{height:20px; width:auto;}
+  .phone-top span{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:13px;}
+  .phone-search{background:var(--white); border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:11.5px; color:rgba(18,32,26,0.45); margin-bottom:14px;}
+  .phone-cat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px;}
+  .phone-cat{background:var(--white); border:1px solid var(--line); border-radius:8px; padding:10px 4px; text-align:center;}
+  .phone-cat .ic{width:16px; height:16px; background:var(--green); border-radius:4px; margin:0 auto 6px;}
+  .phone-cat .t{font-size:8.5px; font-weight:600; color:var(--ink);}
+  .phone-list-h{font-size:10.5px; font-weight:700; margin-bottom:8px; display:flex; justify-content:space-between; color:var(--ink);}
+  .phone-list-h span:last-child{color:var(--green); font-weight:600; font-size:9.5px;}
+  .phone-row{display:flex; justify-content:space-between; align-items:center; background:var(--white); border:1px solid var(--line); border-radius:8px; padding:9px 10px; margin-bottom:7px;}
+  .phone-row .l{font-size:10px; font-weight:600;}
+  .phone-row .r{font-size:9px; color:var(--gold);}
+  .phone-nav{display:flex; justify-content:space-between; margin-top:12px; padding-top:10px; border-top:1px solid var(--line);}
+  .phone-nav div{width:14px; height:14px; border-radius:3px; background:var(--line);}
+  .phone-nav div:first-child{background:var(--green);}
+
+  /* ---------- TICKER ---------- */
+  .ticker{background:var(--gold); border-top:1px solid var(--black); border-bottom:1px solid var(--black); overflow:hidden; white-space:nowrap; padding:11px 0;}
+  .ticker-track{display:inline-block; animation:scroll 32s linear infinite;}
+  @keyframes scroll{from{transform:translateX(0);} to{transform:translateX(-50%);}}
+  .ticker span{font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:13px; text-transform:uppercase; letter-spacing:0.05em; color:var(--black); padding:0 22px; border-right:1px solid rgba(0,0,0,0.3);}
+
+  /* ---------- STATS ---------- */
+  .stats-bar{background:var(--black); color:var(--white);}
+  .stats-grid{max-width:1200px; margin:0 auto; padding:0 32px; display:grid; grid-template-columns:repeat(4,1fr);}
+  .stat{padding:42px 24px; border-right:1px solid rgba(255,255,255,0.12);}
+  .stat:last-child{border-right:none;}
+  .stat .num{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:clamp(28px,3.2vw,42px); color:var(--gold); margin-bottom:6px;}
+  .stat .lbl{font-family:'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:rgba(255,255,255,0.6);}
+
+  /* ---------- WHY GRID ---------- */
+  .why-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--line); border:1px solid var(--line);}
+  .why-item{background:var(--white); padding:26px 20px; min-height:150px; display:flex; flex-direction:column; justify-content:space-between;}
+  .why-item .hexmark{width:30px; height:30px; background:var(--green); clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%); margin-bottom:18px;}
+  .why-item .lbl{font-weight:700; font-size:14.5px; color:var(--black);}
+
+  /* ---------- FLOW ---------- */
+  .flow{display:flex; flex-wrap:wrap; border:1px solid var(--line); background:var(--white);}
+  .flow-step{flex:1 1 100px; display:flex; align-items:center; gap:10px; padding:18px 16px; border-right:1px solid var(--line); font-weight:700; font-size:13.5px;}
+  .flow-step:last-child{border-right:none; background:var(--gold); color:var(--black);}
+  .flow-step .fn{font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--green); font-weight:600;}
+  .flow-step:last-child .fn{color:var(--black);}
+
+  /* ---------- SERVICES DIRECTORY ---------- */
+  .services-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line);}
+  .service-card{background:var(--white); padding:28px 26px; transition:background .18s ease;}
+  .service-card:hover{background:var(--paper-2);}
+  .service-card .code{font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--green); font-weight:600; display:block; margin-bottom:14px;}
+  .service-card h3{font-size:19px; margin-bottom:12px; font-weight:700; font-family:'Space Grotesk', sans-serif;}
+  .service-card ul{font-size:13.5px; color:rgba(18,32,26,0.65);}
+  .service-card ul li{padding:3px 0; position:relative; padding-left:14px;}
+  .service-card ul li::before{content:"—"; position:absolute; left:0; color:var(--gold);}
+  .service-card .more{margin-top:14px; font-family:'IBM Plex Mono', monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--black); font-weight:600; display:inline-block; border-bottom:1px solid var(--gold);}
+
+  /* ---------- KNOWLEDGE / TOOLS GRID ---------- */
+  .kn-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line);}
+  .kn-card{background:var(--white); padding:24px 20px; min-height:110px;}
+  .kn-card .fn{font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--green); font-weight:600; display:block; margin-bottom:12px;}
+  .kn-card .t{font-weight:700; font-size:14px; line-height:1.3; color:var(--black);}
+
+  /* ---------- CALCULATOR ---------- */
+  .calc{display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line); background:var(--white);}
+  .calc-form{padding:40px; border-right:1px solid var(--line);}
+  .calc-field{margin-bottom:22px;}
+  .calc-field label{display:block; font-family:'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--green); margin-bottom:8px; font-weight:600;}
+  .calc-field select, .calc-field input[type=range]{width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:4px; font-family:'Inter', sans-serif; font-size:14px; background:var(--paper); color:var(--ink);}
+  .calc-field input[type=range]{padding:0; accent-color:var(--green);}
+  .calc-range-val{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--black); margin-top:6px;}
+  .calc-result{
+    background:var(--green-deep); color:var(--white);
+    padding:40px; display:flex; flex-direction:column; justify-content:center;
+  }
+  .calc-result .lbl{font-family:'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold); margin-bottom:12px;}
+  .calc-result .amount{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:clamp(30px,3.6vw,44px); color:var(--white); margin-bottom:10px;}
+  .calc-result .note{font-size:12.5px; color:rgba(255,255,255,0.6); line-height:1.5;}
+
+  /* ---------- DASHBOARD PREVIEW ---------- */
+  .dash{border:1px solid var(--line); background:var(--white); display:grid; grid-template-columns:200px 1fr;}
+  .dash-side{background:var(--green-deep); color:var(--white); padding:26px 18px;}
+  .dash-side .u{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:14px; margin-bottom:2px;}
+  .dash-side .e{font-size:11px; color:rgba(255,255,255,0.55); margin-bottom:24px;}
+  .dash-nav-item{display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:5px; font-size:12.5px; font-weight:600; margin-bottom:4px; color:rgba(255,255,255,0.75);}
+  .dash-nav-item.active{background:rgba(255,255,255,0.12); color:var(--white);}
+  .dash-nav-item .dot{width:6px; height:6px; border-radius:50%; background:var(--gold);}
+  .dash-main{padding:30px;}
+  .dash-cards{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px;}
+  .dash-card{border:1px solid var(--line); border-radius:6px; padding:16px;}
+  .dash-card .n{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:22px; color:var(--green);}
+  .dash-card .l{font-family:'IBM Plex Mono', monospace; font-size:10.5px; text-transform:uppercase; color:rgba(18,32,26,0.5); letter-spacing:0.04em;}
+  .dash-booking{border:1px solid var(--line); border-radius:6px; padding:18px; display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .dash-booking .who{font-weight:700; font-size:14px;}
+  .dash-booking .what{font-size:12.5px; color:rgba(18,32,26,0.55);}
+  .dash-status{font-family:'IBM Plex Mono', monospace; font-size:10.5px; text-transform:uppercase; padding:5px 10px; border-radius:12px; background:rgba(14,143,87,0.12); color:var(--green); font-weight:600;}
+  .dash-rate{border:1px dashed var(--gold); border-radius:6px; padding:16px; display:flex; justify-content:space-between; align-items:center; background:rgba(212,175,55,0.06);}
+  .dash-rate .stars{color:var(--gold); font-size:16px; letter-spacing:2px;}
+
+  /* ---------- REVIEWS ---------- */
+  .review-panel{display:grid; grid-template-columns:0.7fr 1.3fr; gap:44px; align-items:center; margin-bottom:40px;}
+  .review-score{text-align:center; border:1px solid var(--line); background:var(--white); padding:36px 20px;}
+  .review-score .big{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:56px; color:var(--black);}
+  .review-score .stars{color:var(--gold); font-size:20px; letter-spacing:3px; margin:8px 0;}
+  .review-score .count{font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:rgba(18,32,26,0.55); text-transform:uppercase; letter-spacing:0.04em;}
+  .review-bars{display:flex; flex-direction:column; gap:9px;}
+  .review-bar-row{display:flex; align-items:center; gap:10px; font-family:'IBM Plex Mono', monospace; font-size:11.5px;}
+  .review-bar-row .stars-n{width:38px; color:rgba(18,32,26,0.6);}
+  .review-bar-track{flex:1; height:8px; background:var(--paper-2); border-radius:4px; overflow:hidden;}
+  .review-bar-fill{height:100%; background:var(--gold);}
+  .review-bar-row .pct{width:36px; text-align:right; color:rgba(18,32,26,0.6);}
+
+  .testimonials{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line);}
+  .testimonial{background:var(--white); padding:28px 24px;}
+  .testimonial .stars{color:var(--gold); letter-spacing:2px; margin-bottom:14px; font-size:13px;}
+  .testimonial p{font-size:14.5px; line-height:1.6; margin-bottom:18px; color:var(--ink);}
+  .testimonial .who{font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--green); text-transform:uppercase; letter-spacing:0.04em;}
+  .testimonials-note{font-size:11.5px; color:rgba(18,32,26,0.4); margin-top:14px; font-family:'IBM Plex Mono', monospace;}
+
+  /* ---------- ROUTE (verification / career) ---------- */
+  .route{position:relative; display:grid; grid-template-columns:repeat(7,1fr); margin-top:12px;}
+  .route::before{content:""; position:absolute; top:19px; left:0; right:0; height:1px; background:repeating-linear-gradient(to right, var(--black) 0 10px, transparent 10px 18px);}
+  .route-step{position:relative; padding:0 12px 0 0;}
+  .route-step .node{width:38px; height:38px; border-radius:50%; background:var(--white); border:1.5px solid var(--black); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:12px; margin-bottom:16px;}
+  .route-step:nth-child(even) .node{background:var(--gold); border-color:var(--gold);}
+  .route-step h4{font-size:13.5px; font-weight:700; margin-bottom:6px;}
+  .route-step p{font-size:11.5px; color:rgba(18,32,26,0.58);}
+
+  .career-strip{display:flex; flex-wrap:wrap; gap:0; border:1px solid var(--line); margin-top:20px;}
+  .career-chip{flex:1 1 auto; text-align:center; padding:16px 10px; font-family:'IBM Plex Mono', monospace; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.02em; border-right:1px solid var(--line); background:var(--white); color:var(--ink);}
+  .career-chip:last-child{border-right:none; background:var(--black); color:var(--gold);}
+
+  /* ---------- SOLUTIONS ---------- */
+  .solutions{display:grid; grid-template-columns:repeat(3,1fr); border:1px solid var(--line);}
+  .solution{padding:36px 30px; border-right:1px solid var(--line); background:var(--white);}
+  .solution:last-child{border-right:none;}
+  .solution h3{font-size:21px; font-weight:700; margin-bottom:12px;}
+  .solution p{font-size:13.5px; color:rgba(18,32,26,0.62); margin-bottom:18px;}
+  .solution ul{font-size:13px; color:rgba(18,32,26,0.75);}
+  .solution ul li{padding:4px 0; padding-left:16px; position:relative;}
+  .solution ul li::before{content:"✓"; position:absolute; left:0; color:var(--green); font-weight:700;}
+
+  /* ---------- BAND ---------- */
+  .band{background:var(--green-deep); color:var(--white); padding:60px 0;}
+  .band .tag{color:var(--gold);}
+  .band .tag::before{background:var(--white);}
+  .band .section-head h2{color:var(--white);}
+  .band .section-head p{color:rgba(255,255,255,0.68);}
+  .tag-cloud{display:flex; flex-wrap:wrap; gap:10px;}
+  .tag-pill{font-family:'IBM Plex Mono', monospace; font-size:12.5px; text-transform:uppercase; letter-spacing:0.03em; padding:9px 16px; border:1px solid rgba(255,255,255,0.3); border-radius:20px;}
+
+  /* ---------- TRUST ---------- */
+  .trust{display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:center;}
+  .trust-visual{border:1px solid var(--line); padding:30px; background:var(--white);}
+  .trust-row{display:flex; justify-content:space-between; align-items:center; padding:13px 0; border-bottom:1px solid var(--line); font-family:'IBM Plex Mono', monospace; font-size:12.5px;}
+  .trust-row:last-child{border-bottom:none;}
+  .trust-row .check{color:var(--green); font-weight:700;}
+  .trust-badges{display:flex; gap:10px; margin-top:22px; flex-wrap:wrap;}
+  .trust-badge{font-family:'IBM Plex Mono', monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; padding:6px 12px; border:1px solid var(--line); border-radius:14px; color:rgba(18,32,26,0.55);}
+
+  /* ---------- REVENUE / BUSINESS MODEL ---------- */
+  .biz{display:grid; grid-template-columns:0.8fr 1.2fr; gap:48px; align-items:center;}
+  .donut-wrap{display:flex; justify-content:center;}
+  .donut{
+    width:230px; height:230px; border-radius:50%; position:relative;
+    background: conic-gradient(
+      var(--green) 0 40%,
+      var(--green-dark) 40% 60%,
+      var(--gold) 60% 70%,
+      #7FB8A0 70% 80%,
+      var(--black) 80% 88%,
+      #C9A96A 88% 92%,
+      #9AA79E 92% 95%,
+      #4E6B5F 95% 97%,
+      #D9D2BE 97% 99%,
+      #E6E6E6 99% 100%
+    );
+  }
+  .donut::after{content:""; position:absolute; inset:32px; background:var(--white); border-radius:50%; display:flex;}
+  .donut-center{position:absolute; inset:32px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;}
+  .donut-center .n{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:22px;}
+  .donut-center .l{font-family:'IBM Plex Mono', monospace; font-size:9.5px; text-transform:uppercase; color:rgba(18,32,26,0.5); max-width:90px;}
+  .rev-legend{display:grid; grid-template-columns:1fr 1fr; gap:10px 22px;}
+  .rev-row{display:flex; align-items:center; gap:10px; font-size:13px;}
+  .rev-swatch{width:11px; height:11px; border-radius:2px; flex-shrink:0;}
+  .rev-row .pct{font-family:'IBM Plex Mono', monospace; font-weight:600; margin-left:auto; color:rgba(18,32,26,0.55); font-size:12px;}
+  .biz-note{font-size:11.5px; color:rgba(18,32,26,0.45); font-family:'IBM Plex Mono', monospace; margin-top:18px; grid-column:1/-1;}
+
+  /* ---------- PRO SPLIT ---------- */
+  .pro-split{background:var(--green-deep); color:var(--white); display:grid; grid-template-columns:1fr 1fr; overflow:hidden;}
+  .pro-copy{padding:56px 48px;}
+  .pro-copy .tag{color:var(--gold);}
+  .pro-copy .tag::before{background:var(--white);}
+  .pro-copy h2{font-size:clamp(26px,3.2vw,38px); color:var(--white); margin-bottom:16px;}
+  .pro-copy p{color:rgba(255,255,255,0.72); font-size:14.5px; margin-bottom:26px; max-width:420px;}
+  .pro-benefits{padding:56px 48px; background:rgba(0,0,0,0.18); display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  .pro-benefit .n{font-family:'IBM Plex Mono', monospace; color:var(--gold); font-size:12px; margin-bottom:8px; display:block;}
+  .pro-benefit .t{font-weight:700; font-size:14px;}
+
+  /* ---------- VISION ---------- */
+  .vision{background:var(--black); color:var(--white); padding:96px 0; text-align:center;}
+  .vision .tag{justify-content:center; color:var(--gold);}
+  .vision .tag::before{display:none;}
+  .vision h2{font-size:clamp(24px,3.2vw,38px); max-width:760px; margin:0 auto 20px; color:var(--white); font-weight:700;}
+  .vision p{max-width:600px; margin:0 auto; color:rgba(255,255,255,0.55); font-size:14.5px;}
+  .vision .legal{margin-top:22px; font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.04em;}
+
+  /* ---------- CTA BANNER ---------- */
+  .cta-banner{background:var(--gold); border-top:1px solid var(--black); border-bottom:1px solid var(--black); text-align:center; padding:72px 32px;}
+  .cta-banner .tag{justify-content:center; color:var(--black);}
+  .cta-banner .tag::before{background:var(--black);}
+  .cta-banner h2{font-size:clamp(28px,4.6vw,52px); color:var(--black); margin-bottom:20px;}
+  .cta-banner .btns{display:flex; gap:14px; justify-content:center; flex-wrap:wrap;}
+  .cta-banner .btn-fill{background:var(--black); border-color:var(--black); color:var(--white);}
+  .cta-banner .btn-fill:hover{background:var(--green-deep); border-color:var(--green-deep);}
+  .cta-banner .btn-ghost{border-color:var(--black); color:var(--black);}
+  .cta-banner .btn-ghost:hover{background:var(--black); color:var(--white);}
+
+  /* ---------- FOOTER ---------- */
+  footer{background:var(--green-deep); color:rgba(255,255,255,0.7); padding:64px 0 28px;}
+  .footer-grid{display:grid; grid-template-columns:1.4fr repeat(4,1fr); gap:32px; margin-bottom:52px;}
+  .footer-col h5{font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--gold); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:18px;}
+  .footer-col ul li{padding:6px 0; font-size:13px;}
+  .footer-col ul li a:hover{color:var(--white);}
+  .footer-logo{display:flex; align-items:center; gap:8px; margin-bottom:14px;}
+  .footer-logo img{height:30px;}
+  .footer-logo .word{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:19px; color:var(--white);}
+  .footer-col p{font-size:13px; max-width:260px; color:rgba(255,255,255,0.5);}
+  .footer-bottom{border-top:1px solid rgba(255,255,255,0.15); padding-top:24px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.04em;}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:900px){
+    .nav-links{display:none;}
+    .hero-grid{grid-template-columns:1fr;}
+    .stats-grid{grid-template-columns:repeat(2,1fr);}
+    .stat{border-right:none; border-bottom:1px solid rgba(255,255,255,0.12);}
+    .why-grid{grid-template-columns:repeat(2,1fr);}
+    .services-grid{grid-template-columns:1fr;}
+    .kn-grid{grid-template-columns:repeat(2,1fr);}
+    .flow-step{flex:1 1 45%; border-bottom:1px solid var(--line);}
+    .route{grid-template-columns:repeat(3,1fr); row-gap:28px;}
+    .route::before{display:none;}
+    .solutions{grid-template-columns:1fr;}
+    .solution{border-right:none; border-bottom:1px solid var(--line);}
+    .pro-split, .dash, .calc, .trust, .biz, .review-panel{grid-template-columns:1fr;}
+    .dash-side{padding:20px;}
+    .testimonials{grid-template-columns:1fr;}
+    .footer-grid{grid-template-columns:repeat(2,1fr);}
+    .career-chip{flex:1 1 45%; border-bottom:1px solid var(--line);}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo">
+      <img src="taskora-icon.png" alt="Taskora icon">
+      <div>
+        <div class="word">TASKORA</div>
+        <div class="powered-by">Powered by Trovec Technologies</div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="#services">Services</a>
+      <a href="#knowledge">Knowledge</a>
+      <a href="#business">For Business</a>
+      <a href="#professional">For Professionals</a>
+      <a href="#company">Company</a>
+    </div>
+    <a href="#download" class="btn btn-gold btn-mini">Download App</a>
+  </div>
+</nav>
+<div class="promo-strip">🚀 We Are Launching — Life Happens, Taskora Helps · Up To 20% Off Your First Booking</div>
+
+<header class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="tag">Pakistan's Trusted Services Ecosystem</div>
+      <h1>One app.<br>Every service,<br><em>every need.</em></h1>
+      <p class="lede">Taskora connects you with 10,000+ verified professionals across 100+ service categories — home, business, and property — booked in minutes, tracked in real time.</p>
+      <div class="hero-ctas">
+        <a href="#download" class="btn btn-gold">Download the App</a>
+        <a href="#services" class="btn btn-ghost">Explore Services</a>
+      </div>
+      <div class="hero-mini-stats">
+        <div><div class="n">100+</div><div class="l">Services</div></div>
+        <div><div class="n">10,000+</div><div class="l">Verified Pros</div></div>
+        <div><div class="n">50,000+</div><div class="l">Happy Customers</div></div>
+        <div><div class="n">24/7</div><div class="l">Support</div></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="phone-top"><img src="taskora-icon.png" alt=""><span>TASKORA</span></div>
+        <div class="phone-search">🔍 Search services…</div>
+        <div class="phone-cat-grid">
+          <div class="phone-cat"><div class="ic"></div><div class="t">Home</div></div>
+          <div class="phone-cat"><div class="ic"></div><div class="t">Business</div></div>
+          <div class="phone-cat"><div class="ic"></div><div class="t">Facility</div></div>
+          <div class="phone-cat"><div class="ic"></div><div class="t">Construction</div></div>
+        </div>
+        <div class="phone-list-h"><span>Popular Services</span><span>View All</span></div>
+        <div class="phone-row"><span class="l">Deep Cleaning</span><span class="r">★ 4.9</span></div>
+        <div class="phone-row"><span class="l">Electrician Visit</span><span class="r">★ 4.8</span></div>
+        <div class="phone-row"><span class="l">AC Service</span><span class="r">★ 4.7</span></div>
+        <div class="phone-nav"><div></div><div></div><div></div><div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ticker" style="margin-top:56px;">
+    <div class="ticker-track">
+      <span>Electricians</span><span>Plumbers</span><span>Interior Design</span><span>Facility Management</span><span>Movers &amp; Packers</span><span>Pest Control</span><span>Architecture</span><span>Housing Societies</span><span>AC Repair</span><span>Construction</span>
+      <span>Electricians</span><span>Plumbers</span><span>Interior Design</span><span>Facility Management</span><span>Movers &amp; Packers</span><span>Pest Control</span><span>Architecture</span><span>Housing Societies</span><span>AC Repair</span><span>Construction</span>
+    </div>
+  </div>
+</header>
+
+<div class="stats-bar">
+  <div class="stats-grid">
+    <div class="stat"><div class="num">100+</div><div class="lbl">Service Categories</div></div>
+    <div class="stat"><div class="num">10,000+</div><div class="lbl">Verified Professionals</div></div>
+    <div class="stat"><div class="num">50,000+</div><div class="lbl">Happy Customers</div></div>
+    <div class="stat"><div class="num">100%</div><div class="lbl">Satisfaction Guarantee</div></div>
+  </div>
+</div>
+
+<section id="company" class="wrap">
+  <div class="section-head">
+    <div>
+      <div class="tag">Who We Are</div>
+      <h2>Built for Pakistan's<br>service economy.</h2>
+    </div>
+    <p>Taskora is a digital platform connecting customers with verified professionals for home services, business support, facility management, architecture, and construction — all from one place.</p>
+  </div>
+  <div class="why-grid">
+    <div class="why-item"><div class="hexmark"></div><span class="lbl">Verified professionals, screened before they reach your door.</span></div>
+    <div class="why-item"><div class="hexmark"></div><span class="lbl">Transparent pricing with no hidden charges.</span></div>
+    <div class="why-item"><div class="hexmark"></div><span class="lbl">Real-time tracking from booking to job completion.</span></div>
+    <div class="why-item"><div class="hexmark"></div><span class="lbl">Secure digital payments, every transaction protected.</span></div>
+    <div class="why-item"><div class="hexmark"></div><span class="lbl">From single homes to full enterprise facility contracts.</span></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="section-head">
+    <div>
+      <div class="tag">What Makes Taskora Different</div>
+      <h2>Not just booking.<br>The whole journey.</h2>
+    </div>
+    <p>Most platforms stop at booking. Taskora takes customers from first question to finished job — and keeps them covered after.</p>
+  </div>
+  <div class="flow">
+    <div class="flow-step"><span class="fn">01</span>Learn</div>
+    <div class="flow-step"><span class="fn">02</span>Compare</div>
+    <div class="flow-step"><span class="fn">03</span>Estimate</div>
+    <div class="flow-step"><span class="fn">04</span>Plan</div>
+    <div class="flow-step"><span class="fn">05</span>Book</div>
+    <div class="flow-step"><span class="fn">06</span>Track</div>
+    <div class="flow-step"><span class="fn">07</span>Pay</div>
+    <div class="flow-step"><span class="fn">08</span>Review</div>
+    <div class="flow-step"><span class="fn">09</span>Maintain</div>
+  </div>
+</section>
+
+<section id="services" class="wrap">
+  <div class="section-head">
+    <div>
+      <div class="tag">Service Directory</div>
+      <h2>Everything, catalogued.</h2>
+    </div>
+    <p>A structured catalogue of professionals across home, business, and property — each category verified through the same trusted system.</p>
+  </div>
+
+  <div class="services-grid">
+    <div class="service-card">
+      <span class="code">T01 — HOME SERVICES</span>
+      <h3>Home Services</h3>
+      <ul><li>House &amp; Deep Cleaning</li><li>Kitchen &amp; Bathroom Cleaning</li><li>Sofa, Carpet &amp; Mattress Cleaning</li><li>Water Tank &amp; Glass Cleaning</li><li>Laundry, Pest Control, Disinfection</li></ul>
+      <span class="more">View all →</span>
+    </div>
+    <div class="service-card">
+      <span class="code">T02 — HOME MAINTENANCE</span>
+      <h3>Home Maintenance</h3>
+      <ul><li>Electricians &amp; Plumbers</li><li>Carpenters &amp; Painters</li><li>AC &amp; Appliance Repair</li><li>CCTV &amp; Solar Installation</li><li>Smart Home Automation</li></ul>
+      <span class="more">View all →</span>
+    </div>
+    <div class="service-card">
+      <span class="code">T03 — ARCHITECTURE &amp; DESIGN</span>
+      <h3>Architecture &amp; Design</h3>
+      <ul><li>Architectural &amp; Interior Design</li><li>Renovation &amp; Landscape Design</li><li>BOQ &amp; Quantity Surveying</li><li>Structural &amp; MEP Design</li><li>3D Rendering &amp; BIM Services</li></ul>
+      <span class="more">View all →</span>
+    </div>
+    <div class="service-card">
+      <span class="code">T04 — CONSTRUCTION</span>
+      <h3>Construction Services</h3>
+      <ul><li>Grey Structure &amp; Finishing</li><li>Waterproofing &amp; Flooring</li><li>False Ceilings</li><li>Aluminum &amp; Glass Work</li><li>Steel Fabrication</li></ul>
+      <span class="more">View all →</span>
+    </div>
+    <div class="service-card">
+      <span class="code">T05 — BUSINESS &amp; FACILITY</span>
+      <h3>Business &amp; Facility Management</h3>
+      <ul><li>Office Cleaning &amp; Janitorial</li><li>Security &amp; Reception Staff</li><li>HVAC &amp; Preventive Maintenance</li><li>Annual Maintenance Contracts</li><li>Waste Management</li></ul>
+      <span class="more">View all →</span>
+    </div>
+    <div class="service-card">
+      <span class="code">T06 — HOUSING SOCIETIES</span>
+      <h3>Housing Society Solutions</h3>
+      <ul><li>Resident Service Portal</li><li>Complaint &amp; Vendor Management</li><li>Visitor Management</li><li>Community Announcements</li><li>Emergency Support</li></ul>
+      <span class="more">View all →</span>
+    </div>
+    <div class="service-card">
+      <span class="code">T07 — COMMERCIAL</span>
+      <h3>Commercial Solutions</h3>
+      <ul><li>Malls, Hotels &amp; Restaurants</li><li>Hospitals &amp; Schools</li><li>Warehouses &amp; Factories</li><li>Banks &amp; Government Offices</li></ul>
+      <span class="more">View all →</span>
+    </div>
+    <div class="service-card">
+      <span class="code">T08 — MOVING &amp; LOGISTICS</span>
+      <h3>Moving &amp; Logistics</h3>
+      <ul><li>Packers &amp; Movers</li><li>Office Relocation</li><li>Furniture Assembly</li><li>Storage Solutions</li></ul>
+      <span class="more">View all →</span>
+    </div>
+    <div class="service-card">
+      <span class="code">T09 — PERSONAL SERVICES</span>
+      <h3>Personal Services</h3>
+      <ul><li>Beauticians &amp; Tutors</li><li>Drivers &amp; Cooks</li><li>Babysitters &amp; Caregivers</li><li>Pet Care &amp; Fitness Trainers</li></ul>
+      <span class="more">View all →</span>
+    </div>
+  </div>
+</section>
+
+<section id="knowledge" class="wrap">
+  <div class="section-head">
+    <div>
+      <div class="tag">Beyond the Marketplace</div>
+      <h2>Pakistan's largest<br>home &amp; property<br>knowledge base.</h2>
+    </div>
+    <p>Guides, checklists, and estimators that build trust before a customer ever books — so every decision is informed.</p>
+  </div>
+  <div class="kn-grid">
+    <div class="kn-card"><span class="fn">GUIDE</span><span class="t">Home maintenance guides</span></div>
+    <div class="kn-card"><span class="fn">GUIDE</span><span class="t">Construction planning resources</span></div>
+    <div class="kn-card"><span class="fn">GUIDE</span><span class="t">Architecture &amp; interior inspiration</span></div>
+    <div class="kn-card"><span class="fn">GUIDE</span><span class="t">Renovation checklists</span></div>
+    <div class="kn-card"><span class="fn">GUIDE</span><span class="t">Cost estimation articles</span></div>
+    <div class="kn-card"><span class="fn">GUIDE</span><span class="t">Facility management best practices</span></div>
+    <div class="kn-card"><span class="fn">GUIDE</span><span class="t">Energy-saving &amp; smart home tips</span></div>
+    <div class="kn-card"><span class="fn">GUIDE</span><span class="t">Seasonal maintenance calendars</span></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="section-head">
+    <div>
+      <div class="tag">Smart Digital Tools</div>
+      <h2>Try the cost estimator.</h2>
+    </div>
+    <p>Get an instant, illustrative price range before you book — final pricing is always confirmed by your professional.</p>
+  </div>
+  <div class="calc">
+    <div class="calc-form">
+      <div class="calc-field">
+        <label>Service Type</label>
+        <select id="calcService">
+          <option value="450">House Cleaning</option>
+          <option value="900">Deep Cleaning</option>
+          <option value="1200">Electrician Visit &amp; Repair</option>
+          <option value="1500">Plumbing Repair</option>
+          <option value="2200">AC Service &amp; Repair</option>
+          <option value="3500">Painting (per room)</option>
+          <option value="6000">Packers &amp; Movers</option>
+        </select>
+      </div>
+      <div class="calc-field">
+        <label>Property Size (Marla)</label>
+        <input type="range" id="calcSize" min="3" max="20" value="5">
+        <div class="calc-range-val"><span id="calcSizeVal">5</span> Marla</div>
+      </div>
+      <div class="calc-field">
+        <label>Frequency</label>
+        <select id="calcFreq">
+          <option value="1">One-Time</option>
+          <option value="0.9">Weekly Plan (10% off)</option>
+          <option value="0.85">Monthly Plan (15% off)</option>
+        </select>
+      </div>
+    </div>
+    <div class="calc-result">
+      <div class="lbl">Estimated Cost</div>
+      <div class="amount" id="calcAmount">PKR 2,000 – 2,600</div>
+      <div class="note">Illustrative estimate based on typical Taskora bookings. Your final price is confirmed by the assigned professional before work begins — no hidden charges.</div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="section-head">
+    <div><div class="tag">More Planning Tools</div><h2>Plan before you book.</h2></div>
+  </div>
+  <div class="kn-grid">
+    <div class="kn-card"><span class="fn">TOOL</span><span class="t">Construction budget calculator</span></div>
+    <div class="kn-card"><span class="fn">TOOL</span><span class="t">Paint &amp; tile quantity calculator</span></div>
+    <div class="kn-card"><span class="fn">TOOL</span><span class="t">Solar savings calculator</span></div>
+    <div class="kn-card"><span class="fn">TOOL</span><span class="t">AMC savings calculator</span></div>
+    <div class="kn-card"><span class="fn">TOOL</span><span class="t">Home maintenance planner</span></div>
+    <div class="kn-card"><span class="fn">TOOL</span><span class="t">Property inspection checklist</span></div>
+    <div class="kn-card"><span class="fn">TOOL</span><span class="t">Project timeline planner</span></div>
+    <div class="kn-card"><span class="fn">TOOL</span><span class="t">Moving cost estimator</span></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="section-head">
+    <div>
+      <div class="tag">Your Account</div>
+      <h2>A dashboard for<br>every customer.</h2>
+    </div>
+    <p>Track bookings, manage payments, save favorite professionals, and rate every job — all from one account.</p>
+  </div>
+  <div class="dash">
+    <div class="dash-side">
+      <div class="u">Ayesha Khan</div>
+      <div class="e">ayesha@customer.taskora.com</div>
+      <div class="dash-nav-item active"><span class="dot"></span>Bookings</div>
+      <div class="dash-nav-item">Payments &amp; Invoices</div>
+      <div class="dash-nav-item">Saved Professionals</div>
+      <div class="dash-nav-item">My Reviews</div>
+      <div class="dash-nav-item">Account Settings</div>
+    </div>
+    <div class="dash-main">
+      <div class="dash-cards">
+        <div class="dash-card"><div class="n">12</div><div class="l">Total Bookings</div></div>
+        <div class="dash-card"><div class="n">PKR 38,400</div><div class="l">Total Spent</div></div>
+        <div class="dash-card"><div class="n">4.9★</div><div class="l">Avg. Given Rating</div></div>
+      </div>
+      <div class="dash-booking">
+        <div><div class="who">Bilal Ahmed — Electrician</div><div class="what">Circuit repair · Today, 4:30 PM · DHA Phase 5</div></div>
+        <div class="dash-status">En Route</div>
+      </div>
+      <div class="dash-booking">
+        <div><div class="who">CleanPro Team — Deep Cleaning</div><div class="what">3-Bed Apartment · Tomorrow, 10:00 AM</div></div>
+        <div class="dash-status">Confirmed</div>
+      </div>
+      <div class="dash-rate">
+        <div><div class="who" style="font-size:13.5px;">Rate your last service</div><div class="what" style="font-size:11.5px;">AC Service with Imran M. — completed Tuesday</div></div>
+        <div class="stars">★★★★★</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="section-head">
+    <div><div class="tag">Ratings &amp; Reviews</div><h2>Trusted by thousands<br>of real bookings.</h2></div>
+  </div>
+  <div class="review-panel">
+    <div class="review-score">
+      <div class="big">4.8</div>
+      <div class="stars">★★★★★</div>
+      <div class="count">From 28,600+ Reviews</div>
+    </div>
+    <div class="review-bars">
+      <div class="review-bar-row"><span class="stars-n">5 star</span><div class="review-bar-track"><div class="review-bar-fill" style="width:78%;"></div></div><span class="pct">78%</span></div>
+      <div class="review-bar-row"><span class="stars-n">4 star</span><div class="review-bar-track"><div class="review-bar-fill" style="width:15%;"></div></div><span class="pct">15%</span></div>
+      <div class="review-bar-row"><span class="stars-n">3 star</span><div class="review-bar-track"><div class="review-bar-fill" style="width:4%;"></div></div><span class="pct">4%</span></div>
+      <div class="review-bar-row"><span class="stars-n">2 star</span><div class="review-bar-track"><div class="review-bar-fill" style="width:2%;"></div></div><span class="pct">2%</span></div>
+      <div class="review-bar-row"><span class="stars-n">1 star</span><div class="review-bar-track"><div class="review-bar-fill" style="width:1%;"></div></div><span class="pct">1%</span></div>
+    </div>
+  </div>
+  <div class="testimonials">
+    <div class="testimonial"><div class="stars">★★★★★</div><p>"Booked an electrician at 9pm for a tripped circuit — someone was at the door in under an hour."</p><div class="who">Sample Review — DHA, Lahore</div></div>
+    <div class="testimonial"><div class="stars">★★★★★</div><p>"We moved our office's entire facility management to one dashboard. Fewer vendors, fewer headaches."</p><div class="who">Sample Review — Office Manager, Karachi</div></div>
+    <div class="testimonial"><div class="stars">★★★★☆</div><p>"Our housing society uses it for maintenance requests now — residents just log in and track status."</p><div class="who">Sample Review — Society Committee, Islamabad</div></div>
+  </div>
+  <div class="testimonials-note">Illustrative reviews for demonstration purposes.</div>
+</section>
+
+<section class="wrap">
+  <div class="section-head">
+    <div><div class="tag">Professional Network</div><h2>From registration<br>to regional manager.</h2></div>
+    <p>Every professional moves through the same verified pipeline, then grows through a transparent career path.</p>
+  </div>
+  <div class="route">
+    <div class="route-step"><div class="node">1</div><h4>Registration</h4><p>Digital sign-up in minutes.</p></div>
+    <div class="route-step"><div class="node">2</div><h4>Verification</h4><p>Identity &amp; document review.</p></div>
+    <div class="route-step"><div class="node">3</div><h4>Training</h4><p>Skills assessment &amp; onboarding.</p></div>
+    <div class="route-step"><div class="node">4</div><h4>Activation</h4><p>Profile goes live on Taskora.</p></div>
+    <div class="route-step"><div class="node">5</div><h4>Job Assignment</h4><p>Matched to nearby bookings.</p></div>
+    <div class="route-step"><div class="node">6</div><h4>Performance</h4><p>Rated on every completed job.</p></div>
+    <div class="route-step"><div class="node">7</div><h4>Growth</h4><p>Unlocks the career path.</p></div>
+  </div>
+  <div class="career-strip">
+    <div class="career-chip">Bronze</div>
+    <div class="career-chip">Silver</div>
+    <div class="career-chip">Gold</div>
+    <div class="career-chip">Platinum</div>
+    <div class="career-chip">Master Pro</div>
+    <div class="career-chip">Team Leader</div>
+    <div class="career-chip">Regional Manager</div>
+  </div>
+</section>
+
+<section id="business" class="wrap">
+  <div class="section-head">
+    <div><div class="tag">Beyond the Household</div><h2>Solutions for<br>every scale.</h2></div>
+    <p>One partner, one dashboard, complete operational support — whether you manage a home, a society, or a portfolio of sites.</p>
+  </div>
+  <div class="solutions">
+    <div class="solution">
+      <div class="tag">For Business</div>
+      <h3>Business Solutions</h3>
+      <p>A centralized platform to manage facility operations, maintenance requests, vendors, and recurring services.</p>
+      <ul><li>Corporate office facility management</li><li>Recurring maintenance contracts</li><li>Vendor consolidation</li><li>Digital reporting dashboard</li></ul>
+    </div>
+    <div class="solution">
+      <div class="tag">For Communities</div>
+      <h3>Housing Society Solutions</h3>
+      <p>Digital tools built for modern residential communities and their management committees.</p>
+      <ul><li>Resident service portal</li><li>Complaint &amp; visitor management</li><li>Community announcements</li><li>Society-wide dashboard</li></ul>
+    </div>
+    <div class="solution">
+      <div class="tag">For Enterprise</div>
+      <h3>Enterprise Solutions</h3>
+      <p>Multi-site service coverage for hospitality, healthcare, education, and industrial facilities.</p>
+      <ul><li>Multi-location coordination</li><li>Compliance-ready reporting</li><li>Dedicated account management</li><li>Custom SLAs</li></ul>
+    </div>
+  </div>
+</section>
+
+<div class="band">
+  <div class="wrap">
+    <div class="section-head">
+      <div><div class="tag">Community Marketplace</div><h2>Where customers &amp;<br>professionals connect.</h2></div>
+      <p>A living record of real work — reviews, portfolios, and galleries that let quality speak for itself.</p>
+    </div>
+    <div class="tag-cloud">
+      <span class="tag-pill">Verified Reviews</span>
+      <span class="tag-pill">Professional Portfolios</span>
+      <span class="tag-pill">Before &amp; After Galleries</span>
+      <span class="tag-pill">Q&amp;A Forums</span>
+      <span class="tag-pill">Expert Recommendations</span>
+      <span class="tag-pill">Success Stories</span>
+      <span class="tag-pill">Seasonal Campaigns</span>
+      <span class="tag-pill">Local Recommendations</span>
+    </div>
+  </div>
+</div>
+
+<section class="wrap">
+  <div class="trust">
+    <div>
+      <div class="tag">Trust &amp; Safety</div>
+      <h2 style="margin-bottom:18px;">Every professional is verified before dispatch.</h2>
+      <p style="color:rgba(18,32,26,0.62); font-size:14.5px; max-width:440px;">Onboarding may include identity verification, document review, skills assessment, and ongoing customer quality monitoring. Exact steps vary by service category and applicable legal requirements.</p>
+      <div class="trust-badges">
+        <span class="trust-badge">SECP Registered</span>
+        <span class="trust-badge">Data Privacy Compliant</span>
+        <span class="trust-badge">Secure Cloud Hosting</span>
+        <span class="trust-badge">Audit Logged</span>
+      </div>
+    </div>
+    <div class="trust-visual">
+      <div class="trust-row"><span>Identity Verification</span><span class="check">✓</span></div>
+      <div class="trust-row"><span>Document Review</span><span class="check">✓</span></div>
+      <div class="trust-row"><span>Skills Assessment</span><span class="check">✓</span></div>
+      <div class="trust-row"><span>Customer Quality Monitoring</span><span class="check">✓</span></div>
+      <div class="trust-row"><span>Secure In-App Payments</span><span class="check">✓</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="band">
+  <div class="wrap">
+    <div class="section-head">
+      <div><div class="tag">Who We Serve</div><h2>Built for every kind<br>of customer.</h2></div>
+      <p>From a single apartment to a portfolio of industrial sites — one platform scales with you.</p>
+    </div>
+    <div class="tag-cloud">
+      <span class="tag-pill">Homeowners</span>
+      <span class="tag-pill">Apartment Residents</span>
+      <span class="tag-pill">Overseas Pakistanis</span>
+      <span class="tag-pill">Property Investors</span>
+      <span class="tag-pill">Restaurants &amp; Hotels</span>
+      <span class="tag-pill">Hospitals &amp; Schools</span>
+      <span class="tag-pill">Banks</span>
+      <span class="tag-pill">Developers</span>
+      <span class="tag-pill">Housing Societies</span>
+      <span class="tag-pill">Government Organizations</span>
+      <span class="tag-pill">Industrial Facilities</span>
+    </div>
+  </div>
+</div>
+
+<section class="wrap">
+  <div class="section-head">
+    <div><div class="tag">Business Model</div><h2>How Taskora<br>sustains the platform.</h2></div>
+    <p>Diversified, transparent revenue streams — built to keep the platform reliable for customers and fair for professionals.</p>
+  </div>
+  <div class="biz">
+    <div class="donut-wrap">
+      <div class="donut">
+        <div class="donut-center"><div class="n">10</div><div class="l">Revenue Streams</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="rev-legend">
+        <div class="rev-row"><span class="rev-swatch" style="background:var(--green);"></span>Marketplace Commissions<span class="pct">40%</span></div>
+        <div class="rev-row"><span class="rev-swatch" style="background:var(--green-dark);"></span>Corporate Contracts<span class="pct">20%</span></div>
+        <div class="rev-row"><span class="rev-swatch" style="background:var(--gold);"></span>Housing Society Contracts<span class="pct">10%</span></div>
+        <div class="rev-row"><span class="rev-swatch" style="background:#7FB8A0;"></span>Subscription Plans<span class="pct">10%</span></div>
+        <div class="rev-row"><span class="rev-swatch" style="background:var(--black);"></span>Facility Management<span class="pct">8%</span></div>
+        <div class="rev-row"><span class="rev-swatch" style="background:#C9A96A;"></span>Featured Listings<span class="pct">4%</span></div>
+        <div class="rev-row"><span class="rev-swatch" style="background:#9AA79E;"></span>Advertising<span class="pct">3%</span></div>
+        <div class="rev-row"><span class="rev-swatch" style="background:#4E6B5F;"></span>Training &amp; Certification<span class="pct">2%</span></div>
+        <div class="rev-row"><span class="rev-swatch" style="background:#D9D2BE;"></span>Franchise Fees<span class="pct">2%</span></div>
+        <div class="rev-row"><span class="rev-swatch" style="background:#E6E6E6;"></span>SaaS &amp; Analytics (Future)<span class="pct">1%</span></div>
+      </div>
+      <div class="biz-note">Illustrative planning split based on growth assumptions — not a financial guarantee.</div>
+    </div>
+  </div>
+</section>
+
+<section id="professional" class="wrap">
+  <div class="pro-split">
+    <div class="pro-copy">
+      <div class="tag">Join The Network</div>
+      <h2>Become a Taskora professional.</h2>
+      <p>Join Pakistan's fastest-growing professional network and get consistent work, weekly payouts, and a digital reputation that follows you.</p>
+      <a href="#download" class="btn btn-gold">Apply to Join</a>
+    </div>
+    <div class="pro-benefits">
+      <div class="pro-benefit"><span class="n">01</span><span class="t">More customers</span></div>
+      <div class="pro-benefit"><span class="n">02</span><span class="t">Weekly payouts</span></div>
+      <div class="pro-benefit"><span class="n">03</span><span class="t">Digital profile</span></div>
+      <div class="pro-benefit"><span class="n">04</span><span class="t">Performance rewards</span></div>
+      <div class="pro-benefit"><span class="n">05</span><span class="t">Training &amp; certification</span></div>
+      <div class="pro-benefit"><span class="n">06</span><span class="t">Flexible hours</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="vision">
+  <div class="wrap">
+    <div class="tag">Long-Term Vision</div>
+    <h2>Building the digital infrastructure for Pakistan's service economy — not just another booking app, but the trusted platform where people discover services, gain knowledge, hire professionals, and operate businesses, all in one connected ecosystem.</h2>
+    <p>Taskora is powered by Trovec Technologies.</p>
+    <div class="legal">Taskora (Pvt.) Ltd. · Registered under SECP · A Trovec Technologies Company</div>
+  </div>
+</div>
+
+<div id="download" class="cta-banner">
+  <div class="tag">Scan · Book · Relax</div>
+  <h2>One app.<br>Every service. Every need.</h2>
+  <div class="btns">
+    <a href="#" class="btn btn-fill">Download for iOS</a>
+    <a href="#" class="btn btn-fill">Download for Android</a>
+    <a href="#" class="btn btn-ghost">Talk to Sales</a>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-logo"><img src="taskora-icon.png" alt="Taskora"><span class="word">TASKORA</span></div>
+        <p>Pakistan's digital platform for trusted, verified home, business, and property services — all from one app.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Services</h5>
+        <ul><li><a href="#services">Home Services</a></li><li><a href="#services">Home Maintenance</a></li><li><a href="#services">Architecture &amp; Design</a></li><li><a href="#services">Construction</a></li></ul>
+      </div>
+      <div class="footer-col">
+        <h5>Solutions</h5>
+        <ul><li><a href="#business">Business</a></li><li><a href="#business">Housing Societies</a></li><li><a href="#business">Enterprise</a></li></ul>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <ul><li><a href="#company">About Us</a></li><li><a href="#professional">Become a Professional</a></li><li><a href="#">Trust &amp; Safety</a></li></ul>
+      </div>
+      <div class="footer-col">
+        <h5>Get The App</h5>
+        <ul><li><a href="#download">iOS</a></li><li><a href="#download">Android</a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Taskora (Pvt.) Ltd. · A Trovec Technologies Company</span>
+      <span>Privacy · Terms · Sitemap</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Cost estimator logic
+  const svc = document.getElementById('calcService');
+  const size = document.getElementById('calcSize');
+  const sizeVal = document.getElementById('calcSizeVal');
+  const freq = document.getElementById('calcFreq');
+  const amount = document.getElementById('calcAmount');
+
+  function fmt(n){ return Math.round(n/50)*50; }
+
+  function updateCalc(){
+    sizeVal.textContent = size.value;
+    const base = parseFloat(svc.value);
+    const sizeFactor = 1 + (parseInt(size.value) - 5) * 0.08;
+    const freqFactor = parseFloat(freq.value);
+    const low = fmt(base * sizeFactor * freqFactor * 0.9);
+    const high = fmt(base * sizeFactor * freqFactor * 1.25);
+    amount.textContent = 'PKR ' + low.toLocaleString() + ' – ' + high.toLocaleString();
+  }
+  [svc, size, freq].forEach(el => el.addEventListener('input', updateCalc));
+  updateCalc();
+</script>
+
+</body>
+</html>
