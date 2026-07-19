@@ -48,6 +48,7 @@ php artisan package:discover --ansi || true
 
 # Wait for PostgreSQL to accept connections
 echo "Waiting for PostgreSQL..."
+DB_ERROR_FILE=/tmp/db-wait-error
 for i in $(seq 1 30); do
     if php -r "
         try {
@@ -58,6 +59,7 @@ for i in $(seq 1 30); do
             );
             exit(0);
         } catch (Throwable \$e) {
+            file_put_contents('$DB_ERROR_FILE', \$e->getMessage() . PHP_EOL);
             exit(1);
         }
     "; then
@@ -66,6 +68,11 @@ for i in $(seq 1 30); do
     fi
     if [ "$i" -eq 30 ]; then
         echo "PostgreSQL did not become ready in time." >&2
+        echo "Last connection error: $(cat "$DB_ERROR_FILE" 2>/dev/null)" >&2
+        echo "Hint: if the error is 'password authentication failed', the postgres" >&2
+        echo "data volume was initialized with a different POSTGRES_PASSWORD." >&2
+        echo "Either restore the original password in .env, or reset the database" >&2
+        echo "volume with: docker compose down && docker volume rm <project>_postgres_data" >&2
         exit 1
     fi
     sleep 2

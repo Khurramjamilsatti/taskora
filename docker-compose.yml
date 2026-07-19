@@ -20,7 +20,10 @@ services:
   app:
     build:
       context: .
-    image: taskora-app:latest
+    # For local/dev builds this defaults to taskora-app:latest.
+    # In production, set APP_IMAGE to the GHCR image and deploy with
+    # `docker compose pull app && docker compose up -d --no-build`.
+    image: ${APP_IMAGE:-taskora-app:latest}
     container_name: taskora-app
     restart: unless-stopped
     depends_on:

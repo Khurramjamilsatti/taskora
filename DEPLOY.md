@@ -172,3 +172,76 @@ docker compose exec app certbot renew --webroot -w /var/www/certbot --deploy-hoo
 - Sessions/cache/queue use the filesystem on the `backend_storage` volume.
 - Postgres data lives on the `postgres_data` volume, TLS certificates on the
   `letsencrypt` volume. Wipe everything with `docker compose down -v`.
+
+---
+
+## 8. CI/CD (GitHub Actions)
+
+Two workflows live in `.github/workflows/`:
+
+| Workflow      | Trigger                     | What it does                                                        |
+|---------------|-----------------------------|--------------------------------------------------------------------|
+| `ci.yml`      | every push & pull request   | Builds the Vue frontend, validates the Laravel backend, builds the Docker image |
+| `deploy.yml`  | push to `main` / manual run | Builds & pushes the image to GHCR, then deploys to the VPS over SSH |
+
+### How deployment works
+
+1. The image is built once on the GitHub runner and pushed to
+   **GHCR** (`ghcr.io/<owner>/taskora-app:latest` + a `:<commit-sha>` tag).
+2. The workflow SSHes into the VPS, pulls that prebuilt image, and runs
+   `docker compose up -d --no-build`. The server no longer builds images itself.
+
+### One-time server preparation
+
+The server keeps the repo (for `docker-compose.yml` + `.env`) but runs the
+prebuilt image:
+
+```bash
+cd ~/taskora
+git pull                      # get the APP_IMAGE-aware compose file
+```
+
+Ensure `.env` on the server contains your production values (DB password,
+`ENABLE_SSL`, `DOMAIN`, etc.). `APP_IMAGE` is injected by the pipeline, so it
+does not need to be in `.env`.
+
+### Required GitHub repository secrets
+
+Add these under **Settings → Secrets and variables → Actions**:
+
+| Secret        | Description                                                    |
+|---------------|---------------------------------------------------------------|
+| `SSH_HOST`    | VPS IP or hostname (e.g. `taskora.digital`)                    |
+| `SSH_USER`    | SSH user (e.g. `root` or a deploy user)                        |
+| `SSH_KEY`     | **Private** SSH key (passphrase-less) authorized on the VPS    |
+| `SSH_PORT`    | Optional, defaults to `22`                                     |
+| `DEPLOY_PATH` | Optional, path to the repo on the VPS (defaults to `~/taskora`)|
+
+`GITHUB_TOKEN` is provided automatically and is used to push/pull the GHCR
+image — no personal access token is required.
+
+### Create a dedicated deploy key
+
+On your workstation (or the server), generate a passphrase-less key just for CI:
+
+```bash
+ssh-keygen -t ed25519 -f taskora_deploy -N "" -C "github-actions-deploy"
+
+# Authorize it on the VPS
+ssh-copy-id -i taskora_deploy.pub <user>@<vps-host>
+# (or append taskora_deploy.pub to ~/.ssh/authorized_keys on the server)
+```
+
+Paste the **private** key (`taskora_deploy`) into the `SSH_KEY` secret.
+
+### GHCR image visibility
+
+The first push creates the package as **private**. The pipeline logs in with
+`GITHUB_TOKEN` before pulling, so private works out of the box. To allow
+pulling without auth, make the package public in
+**GitHub → your profile → Packages → taskora-app → Package settings**.
+
+### Trigger a deployment
+
+- Push to `main`, or
+- **Actions → Deploy → Run workflow** (manual `workflow_dispatch`).
