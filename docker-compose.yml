@@ -40,6 +40,10 @@ services:
       DB_DATABASE: ${POSTGRES_DB:-taskora}
       DB_USERNAME: ${POSTGRES_USER:-taskora}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-taskora_secret}
+      # Default admin account seeded on first boot (change in production!)
+      ADMIN_NAME: ${ADMIN_NAME:-Taskora Admin}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@taskora.digital}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-password}
       # TLS / Let's Encrypt (set ENABLE_SSL=true with a real DOMAIN + email)
       ENABLE_SSL: ${ENABLE_SSL:-false}
       DOMAIN: ${DOMAIN:-}
