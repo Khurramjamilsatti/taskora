@@ -142,23 +142,39 @@ server {
 EOF
 }
 
+issue_certificate() {
+    local staging_flag=""
+    [ "$CERTBOT_STAGING" = "true" ] && staging_flag="--staging"
+    echo "Requesting Let's Encrypt certificate (standalone)..."
+    timeout 120 certbot certonly --standalone --non-interactive --agree-tos \
+        --email "$CERTBOT_EMAIL" -d "$DOMAIN" $staging_flag \
+        --http-01-port 80 --keep-until-expiring \
+        || echo "WARNING: certbot issuance failed; a self-signed certificate will be used until it succeeds."
+}
+
+# A staging cert (or the old "Fake LE" issuer) is NOT trusted by browsers.
+cert_is_staging() {
+    openssl x509 -in "$1" -noout -issuer 2>/dev/null | grep -qiE "staging|fake"
+}
+
 if [ "$ENABLE_SSL" = "true" ] && [ -n "$DOMAIN" ] && [ -n "$CERTBOT_EMAIL" ]; then
     echo "SSL enabled for domain: ${DOMAIN}"
     LIVE_DIR="/etc/letsencrypt/live/${DOMAIN}"
 
-    # Obtain a certificate on first boot. Port 80 is free here because
-    # nginx has not started yet, so we can use the standalone authenticator.
+    # Port 80 is free here because nginx has not started yet, so certbot can
+    # use the standalone authenticator for the initial issuance.
     if [ ! -f "${LIVE_DIR}/fullchain.pem" ]; then
-        STAGING_FLAG=""
-        [ "$CERTBOT_STAGING" = "true" ] && STAGING_FLAG="--staging"
-        echo "Requesting Let's Encrypt certificate (standalone)..."
-        timeout 120 certbot certonly --standalone --non-interactive --agree-tos \
-            --email "$CERTBOT_EMAIL" -d "$DOMAIN" $STAGING_FLAG \
-            --http-01-port 80 \
-            || echo "WARNING: certbot issuance failed; falling back to a self-signed certificate."
+        issue_certificate
+    elif cert_is_staging "${LIVE_DIR}/fullchain.pem" && [ "$CERTBOT_STAGING" != "true" ]; then
+        # Existing cert is from the staging CA but production is requested.
+        # Remove it and request a browser-trusted certificate.
+        echo "Replacing staging certificate with a production certificate..."
+        certbot delete --cert-name "$DOMAIN" --non-interactive 2>/dev/null \
+            || rm -rf "${LIVE_DIR}" "/etc/letsencrypt/archive/${DOMAIN}" "/etc/letsencrypt/renewal/${DOMAIN}.conf"
+        issue_certificate
     fi
 
-    if [ -f "${LIVE_DIR}/fullchain.pem" ]; then
+    if [ -f "${LIVE_DIR}/fullchain.pem" ] && ! { cert_is_staging "${LIVE_DIR}/fullchain.pem" && [ "$CERTBOT_STAGING" != "true" ]; }; then
         echo "Using Let's Encrypt certificate."
         write_ssl_conf "${LIVE_DIR}/fullchain.pem" "${LIVE_DIR}/privkey.pem"
     else
