@@ -1,32 +1,54 @@
 services:
-  backend:
-    build:
-      context: ./backend
-    image: taskora-backend:latest
-    container_name: taskora-backend
+  postgres:
+    image: postgres:16-alpine
+    container_name: taskora-postgres
     restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-taskora}
+      POSTGRES_USER: ${POSTGRES_USER:-taskora}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskora_secret}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-taskora} -d ${POSTGRES_DB:-taskora}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - taskora
+
+  app:
+    build:
+      context: .
+    image: taskora-app:latest
+    container_name: taskora-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
       APP_URL: ${APP_URL:-http://localhost}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${POSTGRES_DB:-taskora}
+      DB_USERNAME: ${POSTGRES_USER:-taskora}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-taskora_secret}
+      # TLS / Let's Encrypt (set ENABLE_SSL=true with a real DOMAIN + email)
+      ENABLE_SSL: ${ENABLE_SSL:-false}
+      DOMAIN: ${DOMAIN:-}
+      CERTBOT_EMAIL: ${CERTBOT_EMAIL:-}
+      CERTBOT_STAGING: ${CERTBOT_STAGING:-false}
     volumes:
       - backend_storage:/var/www/html/storage
-    expose:
-      - "80"
-    networks:
-      - taskora
-
-  frontend:
-    build:
-      context: ./frontend
-    image: taskora-frontend:latest
-    container_name: taskora-frontend
-    restart: unless-stopped
-    depends_on:
-      - backend
+      - letsencrypt:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
     ports:
       - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
     networks:
       - taskora
 
@@ -36,3 +58,6 @@ networks:
 
 volumes:
   backend_storage:
+  postgres_data:
+  letsencrypt:
+  certbot_www:

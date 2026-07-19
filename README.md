@@ -1,29 +1,32 @@
 # Taskora
 
-Marketing website for Taskora, split into a **Vue.js frontend** and a **Laravel API backend**.
+Marketing website for Taskora, split into a **Vue.js frontend** and a **Laravel API backend**, with **PostgreSQL** as the data store.
 
 ## Project Structure
 
 ```
 taskora/
-├── backend/          # Laravel API (content + cost estimator)
-├── frontend/         # Vue 3 + Vite SPA
-└── taskora-website.html  # Original static HTML reference
+├── backend/              # Laravel API (content + cost estimator)
+├── frontend/             # Vue 3 + Vite SPA
+├── docker-compose.yml    # Postgres + backend + frontend
+└── DEPLOY.md             # CentOS / production Docker guide
 ```
 
 ## Prerequisites
 
-- PHP 8.2+
+- PHP 8.4+
 - Composer
 - Node.js 18+
+- PostgreSQL 16+ (or Docker)
 
 ## Backend (Laravel)
 
 ```bash
 cd backend
 composer install
-cp .env.example .env   # if needed
+cp .env.example .env
 php artisan key:generate
+php artisan migrate --seed
 php artisan serve
 ```
 
@@ -33,15 +36,15 @@ API runs at `http://localhost:8000`.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/site` | Full site content (nav, hero, services, reviews, etc.) |
-| POST | `/api/estimate` | Cost estimator calculation |
+| GET | `/api/site` | Full site content loaded from PostgreSQL |
+| POST | `/api/estimate` | Cost estimator (prices from PostgreSQL) |
 
 **Estimate request body:**
 ```json
 {
-  "base_price": 900,
-  "size": 5,
-  "frequency_factor": 1
+  "service_id": "deep_cleaning",
+  "frequency_id": "one_time",
+  "size": 5
 }
 ```
 
@@ -53,38 +56,13 @@ npm install
 npm run dev
 ```
 
-Frontend runs at `http://localhost:5173` and proxies `/api` requests to the Laravel backend.
+Frontend runs at `http://localhost:5173` and proxies `/api` to Laravel.
 
-### Environment
-
-`frontend/.env`:
-```
-VITE_API_URL=http://localhost:8000/api
-```
-
-`backend/.env`:
-```
-FRONTEND_URL=http://localhost:5173
-```
-
-## Development
-
-Run both servers in separate terminals:
+## Production (Docker)
 
 ```bash
-# Terminal 1 — API
-cd backend && php artisan serve
-
-# Terminal 2 — Frontend
-cd frontend && npm run dev
+cp .env.example .env
+docker compose up -d --build
 ```
 
-Open `http://localhost:5173` in your browser.
-
-## Production Build
-
-```bash
-cd frontend && npm run build
-```
-
-Serve the `frontend/dist` folder with any static host (Nginx, Vercel, etc.) and point `VITE_API_URL` to your production Laravel API URL.
+See [DEPLOY.md](DEPLOY.md) for CentOS 10 Stream instructions.

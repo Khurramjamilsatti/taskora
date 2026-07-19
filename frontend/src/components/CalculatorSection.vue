@@ -7,19 +7,23 @@ const props = defineProps({
   section: Object,
 })
 
-const selectedService = ref(props.section.service_types[0].base_price)
+const selectedService = ref(props.section.service_types[0]?.id)
 const size = ref(props.section.size.default)
-const frequencyFactor = ref(props.section.frequencies[0].factor)
+const selectedFrequency = ref(props.section.frequencies[0]?.id)
 const amount = ref('PKR —')
 const loading = ref(false)
 
 async function updateEstimate() {
+  if (!selectedService.value || !selectedFrequency.value) {
+    return
+  }
+
   loading.value = true
   try {
     const result = await calculateEstimate({
-      base_price: selectedService.value,
+      service_id: selectedService.value,
+      frequency_id: selectedFrequency.value,
       size: size.value,
-      frequency_factor: frequencyFactor.value,
     })
     amount.value = result.formatted
   } catch {
@@ -29,7 +33,7 @@ async function updateEstimate() {
   }
 }
 
-watch([selectedService, size, frequencyFactor], updateEstimate)
+watch([selectedService, size, selectedFrequency], updateEstimate)
 onMounted(updateEstimate)
 </script>
 
@@ -44,7 +48,7 @@ onMounted(updateEstimate)
             <option
               v-for="service in section.service_types"
               :key="service.id"
-              :value="service.base_price"
+              :value="service.id"
             >
               {{ service.label }}
             </option>
@@ -57,11 +61,11 @@ onMounted(updateEstimate)
         </div>
         <div class="calc-field">
           <label>Frequency</label>
-          <select v-model="frequencyFactor">
+          <select v-model="selectedFrequency">
             <option
               v-for="freq in section.frequencies"
               :key="freq.id"
-              :value="freq.factor"
+              :value="freq.id"
             >
               {{ freq.label }}
             </option>

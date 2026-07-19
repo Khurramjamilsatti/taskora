@@ -1,14 +1,16 @@
 # Taskora — Production Deployment (Docker)
 
-This repository ships two Docker images orchestrated by `docker-compose.yml`:
+This repository ships **one application image** (frontend + backend combined)
+plus PostgreSQL, orchestrated by `docker-compose.yml`:
 
-| Service    | Image                | Role                                                        |
-|------------|----------------------|-------------------------------------------------------------|
-| `backend`  | `taskora-backend`    | Laravel API (php-fpm + nginx + supervisor), internal only   |
-| `frontend` | `taskora-frontend`   | Vue SPA built with Vite, served by nginx, proxies `/api`    |
+| Service    | Image                | Role                                                                    |
+|------------|----------------------|-------------------------------------------------------------------------|
+| `postgres` | `postgres:16-alpine` | PostgreSQL database for site content and estimates                      |
+| `app`      | `taskora-app`        | Vue SPA **and** Laravel API in one container (nginx + php-fpm + supervisor) |
 
-The frontend nginx serves the compiled SPA **and** reverse-proxies `/api/*` to
-the backend container, so the whole app is a single origin — no CORS needed.
+The single `app` image is built from the repo-root `Dockerfile`: it compiles the
+Vue SPA, installs the Laravel backend, and runs nginx (serving the SPA and
+routing `/api/*` to php-fpm) — one origin, no CORS needed.
 
 ---
 
@@ -55,8 +57,8 @@ cp .env.example .env
 # edit .env — set APP_URL / FRONTEND_URL to your server IP or domain
 ```
 
-For a real domain you would typically set `HTTP_PORT=80` and put a TLS
-terminator (e.g. Caddy, Traefik, or nginx) in front, or extend the compose file.
+Leave `ENABLE_SSL=false` for a plain HTTP deployment (e.g. when using a bare
+IP). To serve HTTPS with a free Let's Encrypt certificate, see section 5.
 
 ---
 
@@ -78,7 +80,69 @@ The site is now available at `http://<server-ip>/` and the API at
 
 ---
 
-## 5. Common operations
+## 5. Enable HTTPS with Let's Encrypt (Certbot)
+
+TLS is built into the `app` container — nginx, php-fpm **and** Certbot run
+together. No extra service or reverse proxy is required.
+
+**Prerequisites**
+
+- A real domain with a DNS **A record pointing to this server's IP**.
+- Ports **80 and 443** open in the firewall (see section 1).
+
+**Configure `.env`:**
+
+```dotenv
+HTTP_PORT=80
+HTTPS_PORT=443
+
+APP_URL=https://taskora.example.com
+FRONTEND_URL=https://taskora.example.com
+
+ENABLE_SSL=true
+DOMAIN=taskora.example.com
+CERTBOT_EMAIL=you@example.com
+# Use staging first to avoid hitting rate limits while testing:
+CERTBOT_STAGING=true
+```
+
+**Launch:**
+
+```bash
+docker compose up -d --build
+docker compose logs -f app   # watch the certificate get issued
+```
+
+On first boot the container:
+
+1. Requests a certificate from Let's Encrypt (standalone, on port 80).
+2. Configures nginx for HTTPS and redirects all HTTP traffic to HTTPS.
+3. Renews the certificate automatically (checked twice daily, nginx reloaded).
+
+If issuance fails (e.g. DNS not propagated yet), the container falls back to a
+**self-signed** certificate so the site still loads over HTTPS. Fix DNS, then:
+
+```bash
+docker compose restart app
+```
+
+Once staging works, switch to real certificates:
+
+```dotenv
+CERTBOT_STAGING=false
+```
+
+```bash
+# Remove the staging cert and re-issue a trusted one
+docker compose exec app rm -rf /etc/letsencrypt/live /etc/letsencrypt/archive /etc/letsencrypt/renewal
+docker compose restart app
+```
+
+Certificates persist in the `letsencrypt` Docker volume across restarts.
+
+---
+
+## 6. Common operations
 
 ```bash
 # Rebuild after pulling new code
@@ -87,20 +151,24 @@ git pull && docker compose up -d --build
 # Stop
 docker compose down
 
-# Stop and wipe persisted data (sqlite db, sessions, logs)
+# Stop and wipe persisted data (postgres, certs, sessions, logs)
 docker compose down -v
 
 # Run an artisan command
-docker compose exec backend php artisan about
+docker compose exec app php artisan about
+
+# Force a certificate renewal check
+docker compose exec app certbot renew --webroot -w /var/www/certbot --deploy-hook "nginx -s reload"
 ```
 
 ---
 
-## 6. Notes on data
+## 7. Notes on data
 
-- The backend is **self-contained**: sessions, cache and queue use the
-  filesystem, and a SQLite database lives on the `backend_storage` volume.
-  No external database service is required.
-- To switch to MySQL/PostgreSQL later, add a `db` service to
-  `docker-compose.yml` and update the `DB_*` variables in
-  `backend/.env.docker` (or pass them as environment overrides).
+- Site content and cost-estimator options are stored in **PostgreSQL**.
+- On first boot the backend runs migrations and seeds content from
+  `config/taskora.php` into Postgres. The frontend loads everything via
+  `GET /api/site`, and estimates via `POST /api/estimate`.
+- Sessions/cache/queue use the filesystem on the `backend_storage` volume.
+- Postgres data lives on the `postgres_data` volume, TLS certificates on the
+  `letsencrypt` volume. Wipe everything with `docker compose down -v`.

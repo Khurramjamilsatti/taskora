@@ -3,29 +3,37 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\EstimateService;
+use App\Services\EstimateServiceCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
 
 class EstimateController extends Controller
 {
-    public function __construct(private EstimateService $estimateService)
+    public function __construct(private EstimateServiceCalculator $estimateService)
     {
     }
 
     public function calculate(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'base_price' => ['required', 'integer', 'min:1'],
+            'service_id' => ['required', 'string'],
+            'frequency_id' => ['required', 'string'],
             'size' => ['required', 'integer', 'min:3', 'max:20'],
-            'frequency_factor' => ['required', 'numeric', 'min:0.1', 'max:2'],
         ]);
 
-        $estimate = $this->estimateService->calculate(
-            $validated['base_price'],
-            $validated['size'],
-            $validated['frequency_factor'],
-        );
+        try {
+            $estimate = $this->estimateService->calculateFromIds(
+                $validated['service_id'],
+                $validated['frequency_id'],
+                $validated['size'],
+            );
+        } catch (InvalidArgumentException $e) {
+            throw ValidationException::withMessages([
+                'service_id' => [$e->getMessage()],
+            ]);
+        }
 
         return response()->json($estimate);
     }

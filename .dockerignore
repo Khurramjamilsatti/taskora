@@ -1,0 +1,30 @@
+**/.git
+**/.gitignore
+**/.DS_Store
+
+# Backend
+backend/vendor
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/bootstrap/cache/*.php
+backend/storage/logs/*.log
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/tests
+backend/.phpunit.result.cache
+backend/Dockerfile
+backend/docker
+
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/Dockerfile
+frontend/docker
+
+# Repo meta
+*.md
+Dockerfile
+.dockerignore
+docker-compose.yml
