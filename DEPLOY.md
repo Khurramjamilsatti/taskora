@@ -198,19 +198,18 @@ docker compose exec app certbot renew --webroot -w /var/www/certbot --deploy-hoo
 Two workflows live in `.github/workflows/`:
 
 
-| Workflow     | Trigger                     | What it does                                                                    |
-| ------------ | --------------------------- | ------------------------------------------------------------------------------- |
-| `ci.yml`     | every push & pull request   | Builds the Vue frontend, validates the Laravel backend, builds the Docker image |
-| `deploy.yml` | push to `main` / manual run | Builds & pushes to GHCR, then deploys to the VPS over SSH (password auth)       |
+| Workflow     | Trigger                          | What it does                                                                 |
+| ------------ | -------------------------------- | ---------------------------------------------------------------------------- |
+| `ci.yml`     | push to `main`, PRs, manual run  | Validates app; on `main` also pushes image to GHCR and deploys to the VPS    |
+| `deploy.yml` | manual only (`workflow_dispatch`) | Redeploy latest `:latest` image to the VPS without a full CI rebuild         |
 
 
 ### How deployment works
 
-1. A GitHub-hosted runner builds the image and pushes it to **GHCR** using
-   `GITHUB_TOKEN` (`packages: write`).
-2. The same workflow SSHes into the VPS using `SSH_USER` + `DEPLOY_ACCESS_TOKEN`
-   (account password), pulls the image, and restarts the `app` container.
-   **No self-hosted runner and no webhook port.**
+1. On every push to `main`, **CI** builds the app, pushes `taskora-app` to GHCR,
+   then SSHes into the VPS and restarts the container.
+2. Stuck/old Deploy runs are cancelled automatically (`cancel-in-progress: true`).
+3. Use **Actions → Deploy → Run workflow** for a manual redeploy.
 
 
 
@@ -258,7 +257,8 @@ Add under **Settings → Secrets and variables → Actions**:
 Image **push** uses built-in `GITHUB_TOKEN`. Image **pull on the VPS** also uses
 `GITHUB_TOKEN` passed over the SSH session.
 
-You do **not** need a self-hosted runner.
+**Important:** Cancel any old Actions runs still stuck on “Waiting for a runner”
+(self-hosted). Those blocked newer Deploy workflows.
 
 ### GHCR image visibility
 
