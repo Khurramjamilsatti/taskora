@@ -50,64 +50,55 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    name: Deploy to VPS
+    name: Deploy via webhook
     needs: build-and-push
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
     steps:
-      - name: Verify SSH deploy secrets
+      - name: Verify webhook secrets
         env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          DEPLOY_ACCESS_TOKEN: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
+          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+          DEPLOY_WEBHOOK_SECRET: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
         run: |
           missing=0
-          if [ -z "$SSH_HOST" ]; then
-            echo "::error::SSH_HOST is empty. Set the VPS hostname or IP."
+          if [ -z "$DEPLOY_WEBHOOK_URL" ]; then
+            echo "::error::DEPLOY_WEBHOOK_URL is empty. Example: http://YOUR_VPS_IP:9100/deploy"
             missing=1
           fi
-          if [ -z "$SSH_USER" ]; then
-            echo "::error::SSH_USER is empty. Set the SSH login user."
-            missing=1
-          fi
-          if [ -z "$DEPLOY_ACCESS_TOKEN" ]; then
-            echo "::error::DEPLOY_ACCESS_TOKEN is empty. Set the SSH password / access token for the deploy user."
+          if [ -z "$DEPLOY_WEBHOOK_SECRET" ]; then
+            echo "::error::DEPLOY_WEBHOOK_SECRET is empty. Must match DEPLOY_WEBHOOK_SECRET in the VPS .env"
             missing=1
           fi
           if [ "$missing" -ne 0 ]; then
             exit 1
           fi
-          echo "SSH deploy secrets are present."
+          echo "Webhook secrets are present."
 
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          envs: GHCR_TOKEN,GHCR_USER,IMAGE,DEPLOY_PATH
-          script: |
-            set -e
-            cd "${DEPLOY_PATH:-$HOME/taskora}"
-
-            # Authenticate to GHCR to pull the freshly built image
-            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-
-            # Keep compose file / config in sync (image carries the app code)
-            git pull --ff-only || echo "git pull skipped"
-
-            # Pull the new image and restart only the app service
-            export APP_IMAGE="${IMAGE}:latest"
-            docker compose pull app
-            docker compose up -d --no-build --remove-orphans
-
-            docker logout ghcr.io
-            docker image prune -f
+      - name: Trigger deploy webhook
         env:
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GHCR_USER: ${{ github.actor }}
+          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+          DEPLOY_WEBHOOK_SECRET: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
           IMAGE: ${{ needs.build-and-push.outputs.image }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          payload=$(jq -n \
+            --arg image "${IMAGE}:latest" \
+            --arg ghcr_user "$GHCR_USER" \
+            --arg ghcr_token "$GHCR_TOKEN" \
+            '{image:$image, ghcr_user:$ghcr_user, ghcr_token:$ghcr_token}')
+
+          echo "Calling deploy webhook for ${IMAGE}:latest"
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${DEPLOY_WEBHOOK_SECRET}" \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            --connect-timeout 15 \
+            --max-time 300 \
+            "$DEPLOY_WEBHOOK_URL"
+
+          echo
+          echo "Deploy webhook accepted."

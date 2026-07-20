@@ -59,6 +59,26 @@ services:
     networks:
       - taskora
 
+  # HTTP deploy webhook (no SSH). GitHub Actions POSTs here after pushing the image.
+  # Requires docker.sock so it can pull/restart the app container on the host.
+  webhook:
+    build:
+      context: ./deploy-webhook
+    image: taskora-webhook:latest
+    container_name: taskora-webhook
+    restart: unless-stopped
+    environment:
+      DEPLOY_WEBHOOK_SECRET: ${DEPLOY_WEBHOOK_SECRET:?Set DEPLOY_WEBHOOK_SECRET in .env}
+      WEBHOOK_PORT: 9100
+      DEPLOY_WORKSPACE: /workspace
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/workspace:ro
+    ports:
+      - "${WEBHOOK_PORT:-9100}:9100"
+    networks:
+      - taskora
+
 networks:
   taskora:
     driver: bridge

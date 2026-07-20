@@ -198,20 +198,19 @@ docker compose exec app certbot renew --webroot -w /var/www/certbot --deploy-hoo
 Two workflows live in `.github/workflows/`:
 
 
-| Workflow     | Trigger                     | What it does                                                                    |
-| ------------ | --------------------------- | ------------------------------------------------------------------------------- |
-| `ci.yml`     | every push & pull request   | Builds the Vue frontend, validates the Laravel backend, builds the Docker image |
-| `deploy.yml` | push to `main` / manual run | Builds & pushes the image to GHCR, then deploys to the VPS over SSH             |
-
-
+| Workflow     | Trigger                     | What it does                                                                              |
+| ------------ | --------------------------- | ----------------------------------------------------------------------------------------- |
+| `ci.yml`     | every push & pull request   | Builds the Vue frontend, validates the Laravel backend, builds the Docker image           |
+| `deploy.yml` | push to `main` / manual run | Builds & pushes the image to GHCR, then POSTs a deploy webhook on the VPS (no SSH)        |
 
 
 ### How deployment works
 
 1. The image is built once on the GitHub runner and pushed to
-  **GHCR** (`ghcr.io/<owner>/taskora-app:latest` + a `:<commit-sha>` tag).
-2. The workflow SSHes into the VPS, pulls that prebuilt image, and runs
-  `docker compose up -d --no-build`. The server no longer builds images itself.
+   **GHCR** (`ghcr.io/<owner>/taskora-app:latest` + a `:<commit-sha>` tag).
+2. The workflow calls the VPS **deploy webhook** (`POST /deploy`) with a shared
+   secret. The webhook pulls the new image and restarts the `app` container.
+   No SSH is used.
 
 
 
@@ -222,59 +221,64 @@ prebuilt image:
 
 ```bash
 cd ~/taskora
-git pull                      # get the APP_IMAGE-aware compose file
+git pull
+
+# Add a long random secret to .env (same value as the GitHub secret):
+# DEPLOY_WEBHOOK_SECRET=...
+# WEBHOOK_PORT=9100
+
+docker compose up -d --build webhook
+# or restart the full stack:
+# docker compose up -d --build
+```
+
+Open the webhook port on the firewall (CentOS / firewalld example):
+
+```bash
+firewall-cmd --permanent --add-port=9100/tcp
+firewall-cmd --reload
 ```
 
 Ensure `.env` on the server contains your production values (DB password,
-`ENABLE_SSL`, `DOMAIN`, etc.). `APP_IMAGE` is injected by the pipeline, so it
-does not need to be in `.env`.
+`ENABLE_SSL`, `DOMAIN`, `DEPLOY_WEBHOOK_SECRET`, etc.). `APP_IMAGE` is sent by
+the pipeline in the webhook payload, so it does not need to be in `.env`.
+
+Health check:
+
+```bash
+curl http://YOUR_VPS_IP:9100/health
+```
 
 ### Required GitHub repository secrets
 
 Add these under **Settings → Secrets and variables → Actions**:
 
 
-| Secret                | Description                                                     |
-| --------------------- | --------------------------------------------------------------- |
-| `SSH_HOST`            | VPS IP or hostname (e.g. `taskora.digital`)                     |
-| `SSH_USER`            | SSH user (e.g. `root` or a deploy user)                         |
-| `DEPLOY_ACCESS_TOKEN` | SSH password (or access token) for `SSH_USER`                   |
-| `SSH_PORT`            | Optional, defaults to `22`                                      |
-| `DEPLOY_PATH`         | Optional, path to the repo on the VPS (defaults to `~/taskora`) |
+| Secret                  | Description                                                                 |
+| ----------------------- | --------------------------------------------------------------------------- |
+| `DEPLOY_WEBHOOK_URL`    | Full webhook URL, e.g. `http://YOUR_VPS_IP:9100/deploy`                     |
+| `DEPLOY_WEBHOOK_SECRET` | Same value as `DEPLOY_WEBHOOK_SECRET` in the VPS `.env`                     |
 
-Password authentication must be enabled on the VPS for this user
-(`PasswordAuthentication yes` in `sshd_config`, then restart sshd).
+`GITHUB_TOKEN` is provided automatically and is used to push the image and to
+let the webhook pull it from GHCR — no personal access token is required.
 
-Key-based secrets (`DEPLOY_SSH_KEY`, `DEPLOY_SSH_PASSPHRASE`, `SSH_KEY`)
-are no longer used by the deploy workflow.
+SSH secrets (`SSH_HOST`, `SSH_USER`, `DEPLOY_ACCESS_TOKEN`, keys, etc.) are
+**not** used anymore.
 
+### Webhook auth
 
-`GITHUB_TOKEN` is provided automatically and is used to push/pull the GHCR
-image — no personal access token is required.
+GitHub Actions sends:
 
-### SSH password / access token
+```http
+POST /deploy
+Authorization: Bearer <DEPLOY_WEBHOOK_SECRET>
+Content-Type: application/json
 
-Use the Linux account password for `SSH_USER`, or create a dedicated deploy
-user and put that password in the `DEPLOY_ACCESS_TOKEN` secret.
-
-On the VPS, ensure password login is allowed:
-
-```bash
-# /etc/ssh/sshd_config
-PasswordAuthentication yes
-
-sudo systemctl restart sshd
+{"image":"ghcr.io/.../taskora-app:latest","ghcr_user":"...","ghcr_token":"..."}
 ```
 
-Confirm you can log in from your machine first:
-
-```bash
-ssh YOUR_USER@YOUR_HOST
-```
-
-Also confirm port 22 (or `SSH_PORT`) is reachable from the public internet;
-a `dial tcp ... i/o timeout` means the firewall or provider security group is
-blocking GitHub Actions.
+Keep `DEPLOY_WEBHOOK_SECRET` long and random. Prefer firewalling port `9100`
+to known ranges if your provider allows it.
 
 ### GHCR image visibility
 
