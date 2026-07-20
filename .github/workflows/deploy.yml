@@ -57,20 +57,23 @@ jobs:
       contents: read
       packages: read
     steps:
-      # Both secrets are required: passphrase alone cannot authenticate.
-      # DEPLOY_SSH_KEY = private key contents, DEPLOY_SSH_PASSPHRASE = unlocks it.
+      # Both are required: passphrase alone cannot authenticate.
+      # Prefer DEPLOY_SSH_KEY; fall back to SSH_KEY if that is what was already set.
       - name: Verify SSH deploy secrets
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
           DEPLOY_SSH_PASSPHRASE: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}
         run: |
+          KEY="${DEPLOY_SSH_KEY:-$SSH_KEY}"
           missing=0
-          if [ -z "$DEPLOY_SSH_KEY" ]; then
-            echo "::error::DEPLOY_SSH_KEY is empty. Paste the full private key (BEGIN/END lines included)."
+          if [ -z "$KEY" ]; then
+            echo "::error::No private key found. Add repository secret DEPLOY_SSH_KEY (or SSH_KEY) with the full private key, including BEGIN/END lines."
+            echo "::error::Repo → Settings → Secrets and variables → Actions → New repository secret"
             missing=1
           fi
           if [ -z "$DEPLOY_SSH_PASSPHRASE" ]; then
-            echo "::error::DEPLOY_SSH_PASSPHRASE is empty. Set the passphrase that unlocks DEPLOY_SSH_KEY."
+            echo "::error::DEPLOY_SSH_PASSPHRASE is empty. Set the passphrase that unlocks the private key."
             missing=1
           fi
           if [ "$missing" -ne 0 ]; then
@@ -83,7 +86,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          key: ${{ secrets.DEPLOY_SSH_KEY || secrets.SSH_KEY }}
           passphrase: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}
           port: ${{ secrets.SSH_PORT || 22 }}
           envs: GHCR_TOKEN,GHCR_USER,IMAGE,DEPLOY_PATH
