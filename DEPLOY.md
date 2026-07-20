@@ -206,10 +206,11 @@ Two workflows live in `.github/workflows/`:
 
 ### How deployment works
 
-1. A GitHub-hosted runner builds the image and pushes it to **GHCR** using your
-   Personal Access Token (`DEPLOY_ACCESS_TOKEN`).
+1. A GitHub-hosted runner builds the image and pushes it to **GHCR** using the
+   built-in `GITHUB_TOKEN` (`packages: write`).
 2. A **self-hosted runner on the VPS** pulls that image and restarts the `app`
-   container. No SSH and no webhook port are used.
+   container (using `DEPLOY_ACCESS_TOKEN` if set, otherwise `GITHUB_TOKEN`).
+   No SSH and no webhook port are used.
 
 
 
@@ -242,12 +243,20 @@ Add under **Settings → Secrets and variables → Actions**:
 
 | Secret                | Description                                                                 |
 | --------------------- | --------------------------------------------------------------------------- |
-| `DEPLOY_ACCESS_TOKEN` | GitHub **Personal Access Token** (classic) with `write:packages`, `read:packages`, and `repo` |
+| `DEPLOY_ACCESS_TOKEN` | Optional. GitHub PAT for the VPS runner to pull private images. If unset, the job `GITHUB_TOKEN` is used. |
 | `DEPLOY_PATH`         | Optional. Path to the repo on the VPS (default `$HOME/taskora`)             |
 
-Create the PAT at **GitHub → Settings → Developer settings → Personal access tokens**.
+**Image push** uses the built-in `GITHUB_TOKEN` (job permission `packages: write`),
+so you do **not** need a PAT for pushing.
 
-Webhook / SSH secrets are **not** used.
+If you set `DEPLOY_ACCESS_TOKEN`, use a **classic** PAT with at least:
+
+- `read:packages`
+- `write:packages` (only if you also use it to push)
+- `repo` (for private repos)
+
+Fine-grained PATs often fail GHCR push with `token does not match expected scopes`
+unless Packages write is explicitly granted for this repository.
 
 ### GHCR image visibility
 
