@@ -134,7 +134,7 @@ jobs:
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
-          DEPLOY_ACCESS_TOKEN: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
           missing=0
           if [ -z "$SSH_HOST" ]; then
@@ -145,20 +145,24 @@ jobs:
             echo "::error::SSH_USER is empty (SSH login user)."
             missing=1
           fi
-          if [ -z "$DEPLOY_ACCESS_TOKEN" ]; then
-            echo "::error::DEPLOY_ACCESS_TOKEN is empty (SSH password for SSH_USER)."
+          if [ -z "$DEPLOY_SSH_KEY" ]; then
+            echo "::error::DEPLOY_SSH_KEY is empty."
+            echo "::error::Create a passphrase-free key and paste the PRIVATE key into this secret."
+            echo "::error::See DEPLOY.md → 'CI deploy key setup'."
             missing=1
           fi
           if [ "$missing" -ne 0 ]; then
             exit 1
           fi
 
+      # Password auth is often disabled on VPS images. Use a passphrase-free
+      # deploy key instead (DEPLOY_SSH_KEY).
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           command_timeout: 10m
           envs: GHCR_TOKEN,GHCR_USER,IMAGE,DEPLOY_PATH

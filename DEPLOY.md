@@ -207,9 +207,9 @@ Two workflows live in `.github/workflows/`:
 ### How deployment works
 
 1. On every push to `main`, **CI** builds the app, pushes `taskora-app` to GHCR,
-   then SSHes into the VPS and restarts the container.
-2. Stuck/old Deploy runs are cancelled automatically (`cancel-in-progress: true`).
-3. Use **Actions → Deploy → Run workflow** for a manual redeploy.
+   then SSHes into the VPS with a **passphrase-free deploy key** and restarts
+   the container.
+2. Use **Actions → Deploy → Run workflow** for a manual redeploy.
 
 
 
@@ -221,44 +221,75 @@ git pull
 docker compose up -d
 ```
 
-On the VPS, password SSH must be allowed for the deploy user:
+Open port **22** in the firewall / provider security group so GitHub Actions
+can reach the host.
 
-```bash
-# /etc/ssh/sshd_config (or a drop-in under sshd_config.d/)
-PasswordAuthentication yes
-# If deploying as root:
-PermitRootLogin yes
+### CI deploy key setup (required)
 
-sudo systemctl restart sshd
+Password SSH is often disabled on VPS images, which causes:
+
+```text
+ssh: unable to authenticate, attempted methods [none password]
 ```
 
-Confirm from your laptop:
+Use a **passphrase-free SSH key** instead.
+
+#### 1) On your laptop — create the key
 
 ```bash
-ssh YOUR_USER@YOUR_HOST
+ssh-keygen -t ed25519 -f ~/taskora_deploy -N "" -C "github-actions-taskora"
 ```
 
-Open port 22 in the firewall / provider security group if GitHub Actions cannot
-reach the host (`dial tcp ... timeout`).
+`-N ""` means **no passphrase** (required for GitHub Actions).
 
-### Required GitHub repository secrets
+#### 2) On the VPS — authorize the public key
 
-Add under **Settings → Secrets and variables → Actions**:
+```bash
+# From your laptop (replace user/host):
+ssh-copy-id -i ~/taskora_deploy.pub USER@HOST
+
+# Or on the VPS manually:
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+echo 'PASTE_CONTENTS_OF_taskora_deploy.pub_HERE' >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+```
+
+#### 3) Test from your laptop (must work without asking for a password)
+
+```bash
+ssh -i ~/taskora_deploy -o IdentitiesOnly=yes USER@HOST 'echo ok && docker ps >/dev/null && echo docker-ok'
+```
+
+If this fails, GitHub Actions will fail too. Fix this before continuing.
+
+#### 4) GitHub secrets
+
+Repo → **Settings → Secrets and variables → Actions**:
 
 
-| Secret                | Description                                                          |
-| --------------------- | -------------------------------------------------------------------- |
-| `SSH_HOST`            | VPS IP or hostname                                                   |
-| `SSH_USER`            | SSH login user                                                       |
-| `DEPLOY_ACCESS_TOKEN` | That user’s **SSH password** (not a GitHub PAT for this step)        |
-| `SSH_PORT`            | Optional, defaults to `22`                                           |
-| `DEPLOY_PATH`         | Optional. Path to the repo on the VPS (default `$HOME/taskora`)      |
+| Secret           | Value                                              |
+| ---------------- | -------------------------------------------------- |
+| `SSH_HOST`       | VPS IP or hostname                                 |
+| `SSH_USER`       | SSH user (same as in the test above)               |
+| `DEPLOY_SSH_KEY` | Full contents of `~/taskora_deploy` (private key, including `BEGIN`/`END` lines) |
+| `SSH_PORT`       | Optional, default `22`                             |
+| `DEPLOY_PATH`    | Optional, default `$HOME/taskora`                  |
 
-Image **push** uses built-in `GITHUB_TOKEN`. Image **pull on the VPS** also uses
-`GITHUB_TOKEN` passed over the SSH session.
+```bash
+# Copy private key to clipboard (macOS), then paste into DEPLOY_SSH_KEY:
+pbcopy < ~/taskora_deploy
+# Or print it:
+cat ~/taskora_deploy
+```
 
-**Important:** Cancel any old Actions runs still stuck on “Waiting for a runner”
-(self-hosted). Those blocked newer Deploy workflows.
+You do **not** need `DEPLOY_ACCESS_TOKEN` / password for deploy anymore.
+
+#### 5) Re-run CI
+
+Push to `main` or **Actions → CI → Run workflow**.
+
+Image **push** uses `GITHUB_TOKEN`. Image **pull on the VPS** uses the same
+token passed over SSH.
 
 ### GHCR image visibility
 
