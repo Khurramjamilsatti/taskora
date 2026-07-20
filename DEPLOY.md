@@ -234,36 +234,47 @@ does not need to be in `.env`.
 Add these under **Settings → Secrets and variables → Actions**:
 
 
-| Secret                   | Description                                                              |
-| ------------------------ | ------------------------------------------------------------------------ |
-| `SSH_HOST`               | VPS IP or hostname (e.g. `taskora.digital`)                              |
-| `SSH_USER`               | SSH user (e.g. `root` or a deploy user)                                  |
-| `DEPLOY_SSH_KEY`         | Full **private** SSH key contents (`BEGIN`/`END` lines). Required.       |
-| `DEPLOY_SSH_PASSPHRASE`  | Passphrase that unlocks `DEPLOY_SSH_KEY`. Required with the key.         |
-| `SSH_PORT`               | Optional, defaults to `22`                                               |
-| `DEPLOY_PATH`            | Optional, path to the repo on the VPS (defaults to `~/taskora`)          |
+| Secret                | Description                                                     |
+| --------------------- | --------------------------------------------------------------- |
+| `SSH_HOST`            | VPS IP or hostname (e.g. `taskora.digital`)                     |
+| `SSH_USER`            | SSH user (e.g. `root` or a deploy user)                         |
+| `DEPLOY_ACCESS_TOKEN` | SSH password (or access token) for `SSH_USER`                   |
+| `SSH_PORT`            | Optional, defaults to `22`                                      |
+| `DEPLOY_PATH`         | Optional, path to the repo on the VPS (defaults to `~/taskora`) |
 
-`DEPLOY_SSH_PASSPHRASE` only works together with a non-empty `DEPLOY_SSH_KEY`.
+Password authentication must be enabled on the VPS for this user
+(`PasswordAuthentication yes` in `sshd_config`, then restart sshd).
+
+Key-based secrets (`DEPLOY_SSH_KEY`, `DEPLOY_SSH_PASSPHRASE`, `SSH_KEY`)
+are no longer used by the deploy workflow.
 
 
 `GITHUB_TOKEN` is provided automatically and is used to push/pull the GHCR
 image — no personal access token is required.
 
-### Create a dedicated deploy key
+### SSH password / access token
 
-On your workstation, generate a passphrase-protected key for CI:
+Use the Linux account password for `SSH_USER`, or create a dedicated deploy
+user and put that password in the `DEPLOY_ACCESS_TOKEN` secret.
+
+On the VPS, ensure password login is allowed:
 
 ```bash
-ssh-keygen -t ed25519 -f taskora_deploy -C "github-actions-deploy"
-# enter a passphrase when prompted (this becomes DEPLOY_SSH_PASSPHRASE)
+# /etc/ssh/sshd_config
+PasswordAuthentication yes
 
-# Authorize it on the VPS
-ssh-copy-id -i taskora_deploy.pub <user>@<vps-host>
-# (or append taskora_deploy.pub to ~/.ssh/authorized_keys on the server)
+sudo systemctl restart sshd
 ```
 
-Paste the **private** key (`taskora_deploy`) into the `DEPLOY_SSH_KEY` secret,
-and set `DEPLOY_SSH_PASSPHRASE` to the passphrase you chose.
+Confirm you can log in from your machine first:
+
+```bash
+ssh YOUR_USER@YOUR_HOST
+```
+
+Also confirm port 22 (or `SSH_PORT`) is reachable from the public internet;
+a `dial tcp ... i/o timeout` means the firewall or provider security group is
+blocking GitHub Actions.
 
 ### GHCR image visibility
 
