@@ -57,7 +57,7 @@ jobs:
           envs: GHCR_TOKEN,GHCR_USER,IMAGE,DEPLOY_PATH
           script: |
             set -e
-            cd "${DEPLOY_PATH:-$HOME/taskora}"
+            cd "${DEPLOY_PATH:-/var/www/html/taskora}"
 
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 

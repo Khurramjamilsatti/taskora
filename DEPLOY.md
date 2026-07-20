@@ -216,7 +216,7 @@ Two workflows live in `.github/workflows/`:
 ### One-time server preparation
 
 ```bash
-cd ~/taskora
+cd /var/www/html/taskora
 git pull
 docker compose up -d
 ```
@@ -273,7 +273,7 @@ Repo → **Settings → Secrets and variables → Actions**:
 | `SSH_USER`       | SSH user (same as in the test above)               |
 | `DEPLOY_SSH_KEY` | Full contents of `~/taskora_deploy` (private key, including `BEGIN`/`END` lines) |
 | `SSH_PORT`       | Optional, default `22`                             |
-| `DEPLOY_PATH`    | Optional, default `$HOME/taskora`                  |
+| `DEPLOY_PATH`    | Optional, default `/var/www/html/taskora`          |
 
 ```bash
 # Copy private key to clipboard (macOS), then paste into DEPLOY_SSH_KEY:
