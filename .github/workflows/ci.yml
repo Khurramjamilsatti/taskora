@@ -76,10 +76,21 @@ jobs:
       - name: Decide whether to push
         id: meta
         run: |
+          owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          image="ghcr.io/${owner}/taskora-app"
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "pushed=false" >> "$GITHUB_OUTPUT"
+            # Local-only tag for PR validation (never pushed)
+            echo "tags=taskora-app:ci" >> "$GITHUB_OUTPUT"
           else
             echo "pushed=true" >> "$GITHUB_OUTPUT"
+            # Only GHCR tags — a bare "taskora-app:ci" would push to Docker Hub
+            {
+              echo "tags<<EOF"
+              echo "${image}:latest"
+              echo "${image}:${{ github.sha }}"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
           fi
 
       - name: Set up Docker Buildx
@@ -98,10 +109,7 @@ jobs:
         with:
           context: .
           push: ${{ steps.meta.outputs.pushed == 'true' }}
-          tags: |
-            ${{ steps.image.outputs.name }}:latest
-            ${{ steps.image.outputs.name }}:${{ github.sha }}
-            taskora-app:ci
+          tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
