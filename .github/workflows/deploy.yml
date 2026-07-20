@@ -28,6 +28,18 @@ jobs:
           owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
           echo "name=ghcr.io/${owner}/taskora-app" >> "$GITHUB_OUTPUT"
 
+      - name: Verify access token
+        env:
+          DEPLOY_ACCESS_TOKEN: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$DEPLOY_ACCESS_TOKEN" ]; then
+            echo "::error::DEPLOY_ACCESS_TOKEN is empty."
+            echo "::error::Create a GitHub PAT (classic) with write:packages, read:packages, and repo scopes,"
+            echo "::error::then add it as repository secret DEPLOY_ACCESS_TOKEN."
+            exit 1
+          fi
+          echo "DEPLOY_ACCESS_TOKEN is set."
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -36,7 +48,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
 
       - name: Build & push
         uses: docker/build-push-action@v6
@@ -50,55 +62,28 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    name: Deploy via webhook
+    name: Deploy on VPS runner
     needs: build-and-push
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
+    # Runs ON the VPS via a self-hosted GitHub Actions runner (no SSH, no webhook).
+    runs-on: self-hosted
     steps:
-      - name: Verify webhook secrets
+      - name: Pull and restart app
         env:
-          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
-          DEPLOY_WEBHOOK_SECRET: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
-        run: |
-          missing=0
-          if [ -z "$DEPLOY_WEBHOOK_URL" ]; then
-            echo "::error::DEPLOY_WEBHOOK_URL is empty. Example: http://YOUR_VPS_IP:9100/deploy"
-            missing=1
-          fi
-          if [ -z "$DEPLOY_WEBHOOK_SECRET" ]; then
-            echo "::error::DEPLOY_WEBHOOK_SECRET is empty. Must match DEPLOY_WEBHOOK_SECRET in the VPS .env"
-            missing=1
-          fi
-          if [ "$missing" -ne 0 ]; then
-            exit 1
-          fi
-          echo "Webhook secrets are present."
-
-      - name: Trigger deploy webhook
-        env:
-          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
-          DEPLOY_WEBHOOK_SECRET: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
-          IMAGE: ${{ needs.build-and-push.outputs.image }}
+          APP_IMAGE: ${{ needs.build-and-push.outputs.image }}:latest
+          DEPLOY_ACCESS_TOKEN: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
           GHCR_USER: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           set -euo pipefail
-          payload=$(jq -n \
-            --arg image "${IMAGE}:latest" \
-            --arg ghcr_user "$GHCR_USER" \
-            --arg ghcr_token "$GHCR_TOKEN" \
-            '{image:$image, ghcr_user:$ghcr_user, ghcr_token:$ghcr_token}')
+          cd "${DEPLOY_PATH:-$HOME/taskora}"
 
-          echo "Calling deploy webhook for ${IMAGE}:latest"
-          curl -fsS -X POST \
-            -H "Authorization: Bearer ${DEPLOY_WEBHOOK_SECRET}" \
-            -H "Content-Type: application/json" \
-            -d "$payload" \
-            --connect-timeout 15 \
-            --max-time 300 \
-            "$DEPLOY_WEBHOOK_URL"
+          echo "$DEPLOY_ACCESS_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 
-          echo
-          echo "Deploy webhook accepted."
+          export APP_IMAGE
+          docker compose pull app
+          docker compose up -d --no-build --remove-orphans
+
+          docker logout ghcr.io
+          docker image prune -f
+
+          echo "Deployed ${APP_IMAGE}"
