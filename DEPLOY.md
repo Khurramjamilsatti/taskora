@@ -201,16 +201,16 @@ Two workflows live in `.github/workflows/`:
 | Workflow     | Trigger                     | What it does                                                                    |
 | ------------ | --------------------------- | ------------------------------------------------------------------------------- |
 | `ci.yml`     | every push & pull request   | Builds the Vue frontend, validates the Laravel backend, builds the Docker image |
-| `deploy.yml` | push to `main` / manual run | Builds & pushes to GHCR with `DEPLOY_ACCESS_TOKEN`, then deploys on a self-hosted VPS runner |
+| `deploy.yml` | push to `main` / manual run | Builds & pushes to GHCR, then deploys to the VPS over SSH (password auth)       |
 
 
 ### How deployment works
 
-1. A GitHub-hosted runner builds the image and pushes it to **GHCR** using the
-   built-in `GITHUB_TOKEN` (`packages: write`).
-2. A **self-hosted runner on the VPS** pulls that image and restarts the `app`
-   container (using `DEPLOY_ACCESS_TOKEN` if set, otherwise `GITHUB_TOKEN`).
-   No SSH and no webhook port are used.
+1. A GitHub-hosted runner builds the image and pushes it to **GHCR** using
+   `GITHUB_TOKEN` (`packages: write`).
+2. The same workflow SSHes into the VPS using `SSH_USER` + `DEPLOY_ACCESS_TOKEN`
+   (account password), pulls the image, and restarts the `app` container.
+   **No self-hosted runner and no webhook port.**
 
 
 
@@ -219,44 +219,46 @@ Two workflows live in `.github/workflows/`:
 ```bash
 cd ~/taskora
 git pull
-# ensure .env has production values; optionally set:
-# APP_IMAGE=ghcr.io/khurramjamilsatti/taskora-app:latest
 docker compose up -d
 ```
 
-### Install a self-hosted runner on the VPS
+On the VPS, password SSH must be allowed for the deploy user:
 
-1. GitHub → **repo → Settings → Actions → Runners → New self-hosted runner**
-2. Follow the Linux instructions on the VPS (download, `./config.sh`, `./run.sh`
-   or install as a service with `sudo ./svc.sh install && sudo ./svc.sh start`).
-3. When `config.sh` asks for a token, use the registration token shown on that
-   GitHub page (or a PAT with `admin:org` / repo admin rights for runners).
+```bash
+# /etc/ssh/sshd_config (or a drop-in under sshd_config.d/)
+PasswordAuthentication yes
+# If deploying as root:
+PermitRootLogin yes
 
-The runner must run as a user that can execute `docker` / `docker compose`
-(usually in the `docker` group), and the working directory for deploy defaults
-to `$HOME/taskora` (override with secret `DEPLOY_PATH`).
+sudo systemctl restart sshd
+```
+
+Confirm from your laptop:
+
+```bash
+ssh YOUR_USER@YOUR_HOST
+```
+
+Open port 22 in the firewall / provider security group if GitHub Actions cannot
+reach the host (`dial tcp ... timeout`).
 
 ### Required GitHub repository secrets
 
 Add under **Settings → Secrets and variables → Actions**:
 
 
-| Secret                | Description                                                                 |
-| --------------------- | --------------------------------------------------------------------------- |
-| `DEPLOY_ACCESS_TOKEN` | Optional. GitHub PAT for the VPS runner to pull private images. If unset, the job `GITHUB_TOKEN` is used. |
-| `DEPLOY_PATH`         | Optional. Path to the repo on the VPS (default `$HOME/taskora`)             |
+| Secret                | Description                                                          |
+| --------------------- | -------------------------------------------------------------------- |
+| `SSH_HOST`            | VPS IP or hostname                                                   |
+| `SSH_USER`            | SSH login user                                                       |
+| `DEPLOY_ACCESS_TOKEN` | That user’s **SSH password** (not a GitHub PAT for this step)        |
+| `SSH_PORT`            | Optional, defaults to `22`                                           |
+| `DEPLOY_PATH`         | Optional. Path to the repo on the VPS (default `$HOME/taskora`)      |
 
-**Image push** uses the built-in `GITHUB_TOKEN` (job permission `packages: write`),
-so you do **not** need a PAT for pushing.
+Image **push** uses built-in `GITHUB_TOKEN`. Image **pull on the VPS** also uses
+`GITHUB_TOKEN` passed over the SSH session.
 
-If you set `DEPLOY_ACCESS_TOKEN`, use a **classic** PAT with at least:
-
-- `read:packages`
-- `write:packages` (only if you also use it to push)
-- `repo` (for private repos)
-
-Fine-grained PATs often fail GHCR push with `token does not match expected scopes`
-unless Packages write is explicitly granted for this repository.
+You do **not** need a self-hosted runner.
 
 ### GHCR image visibility
 
