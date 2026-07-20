@@ -3,16 +3,20 @@
 This repository ships **one application image** (frontend + backend combined)
 plus PostgreSQL, orchestrated by `docker-compose.yml`:
 
-| Service    | Image                | Role                                                                    |
-|------------|----------------------|-------------------------------------------------------------------------|
-| `postgres` | `postgres:16-alpine` | PostgreSQL database for site content and estimates                      |
+
+| Service    | Image                | Role                                                                        |
+| ---------- | -------------------- | --------------------------------------------------------------------------- |
+| `postgres` | `postgres:16-alpine` | PostgreSQL database for site content and estimates                          |
 | `app`      | `taskora-app`        | Vue SPA **and** Laravel API in one container (nginx + php-fpm + supervisor) |
+
 
 The single `app` image is built from the repo-root `Dockerfile`: it compiles the
 Vue SPA, installs the Laravel backend, and runs nginx (serving the SPA and
 routing `/api/*` to php-fpm) — one origin, no CORS needed.
 
 ---
+
+
 
 ## 1. Install Docker on CentOS 10 Stream
 
@@ -41,6 +45,8 @@ sudo firewall-cmd --reload
 
 ---
 
+
+
 ## 2. Get the code
 
 ```bash
@@ -50,17 +56,21 @@ cd taskora
 
 ---
 
+
+
 ## 3. Configure
 
 ```bash
 cp .env.example .env
-# edit .env — set APP_URL / FRONTEND_URL to your server IP or domain
+# sdf edit .env — set APP_URL / FRONTEND_URL to your server IP or domain
 ```
 
 Leave `ENABLE_SSL=false` for a plain HTTP deployment (e.g. when using a bare
 IP). To serve HTTPS with a free Let's Encrypt certificate, see section 5.
 
 ---
+
+
 
 ## 4. Build & run
 
@@ -80,6 +90,8 @@ The site is now available at `http://<server-ip>/` and the API at
 
 ---
 
+
+
 ## 5. Enable HTTPS with Let's Encrypt (Certbot)
 
 TLS is built into the `app` container — nginx, php-fpm **and** Certbot run
@@ -90,7 +102,7 @@ together. No extra service or reverse proxy is required.
 - A real domain with a DNS **A record pointing to this server's IP**.
 - Ports **80 and 443** open in the firewall (see section 1).
 
-**Configure `.env`:**
+**Configure** `.env`**:**
 
 ```dotenv
 HTTP_PORT=80
@@ -142,6 +154,8 @@ Certificates persist in the `letsencrypt` Docker volume across restarts.
 
 ---
 
+
+
 ## 6. Common operations
 
 ```bash
@@ -163,33 +177,43 @@ docker compose exec app certbot renew --webroot -w /var/www/certbot --deploy-hoo
 
 ---
 
+
+
 ## 7. Notes on data
 
 - Site content and cost-estimator options are stored in **PostgreSQL**.
 - On first boot the backend runs migrations and seeds content from
-  `config/taskora.php` into Postgres. The frontend loads everything via
-  `GET /api/site`, and estimates via `POST /api/estimate`.
+`config/taskora.php` into Postgres. The frontend loads everything via
+`GET /api/site`, and estimates via `POST /api/estimate`.
 - Sessions/cache/queue use the filesystem on the `backend_storage` volume.
 - Postgres data lives on the `postgres_data` volume, TLS certificates on the
-  `letsencrypt` volume. Wipe everything with `docker compose down -v`.
+`letsencrypt` volume. Wipe everything with `docker compose down -v`.
 
 ---
+
+
 
 ## 8. CI/CD (GitHub Actions)
 
 Two workflows live in `.github/workflows/`:
 
-| Workflow      | Trigger                     | What it does                                                        |
-|---------------|-----------------------------|--------------------------------------------------------------------|
-| `ci.yml`      | every push & pull request   | Builds the Vue frontend, validates the Laravel backend, builds the Docker image |
-| `deploy.yml`  | push to `main` / manual run | Builds & pushes the image to GHCR, then deploys to the VPS over SSH |
+
+| Workflow     | Trigger                     | What it does                                                                    |
+| ------------ | --------------------------- | ------------------------------------------------------------------------------- |
+| `ci.yml`     | every push & pull request   | Builds the Vue frontend, validates the Laravel backend, builds the Docker image |
+| `deploy.yml` | push to `main` / manual run | Builds & pushes the image to GHCR, then deploys to the VPS over SSH             |
+
+
+
 
 ### How deployment works
 
 1. The image is built once on the GitHub runner and pushed to
-   **GHCR** (`ghcr.io/<owner>/taskora-app:latest` + a `:<commit-sha>` tag).
+  **GHCR** (`ghcr.io/<owner>/taskora-app:latest` + a `:<commit-sha>` tag).
 2. The workflow SSHes into the VPS, pulls that prebuilt image, and runs
-   `docker compose up -d --no-build`. The server no longer builds images itself.
+  `docker compose up -d --no-build`. The server no longer builds images itself.
+
+
 
 ### One-time server preparation
 
@@ -209,30 +233,37 @@ does not need to be in `.env`.
 
 Add these under **Settings → Secrets and variables → Actions**:
 
-| Secret        | Description                                                    |
-|---------------|---------------------------------------------------------------|
-| `SSH_HOST`    | VPS IP or hostname (e.g. `taskora.digital`)                    |
-| `SSH_USER`    | SSH user (e.g. `root` or a deploy user)                        |
-| `SSH_KEY`     | **Private** SSH key (passphrase-less) authorized on the VPS    |
-| `SSH_PORT`    | Optional, defaults to `22`                                     |
-| `DEPLOY_PATH` | Optional, path to the repo on the VPS (defaults to `~/taskora`)|
+
+| Secret                   | Description                                                              |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `SSH_HOST`               | VPS IP or hostname (e.g. `taskora.digital`)                              |
+| `SSH_USER`               | SSH user (e.g. `root` or a deploy user)                                  |
+| `DEPLOY_SSH_KEY`         | Full **private** SSH key contents (`BEGIN`/`END` lines). Required.       |
+| `DEPLOY_SSH_PASSPHRASE`  | Passphrase that unlocks `DEPLOY_SSH_KEY`. Required with the key.         |
+| `SSH_PORT`               | Optional, defaults to `22`                                               |
+| `DEPLOY_PATH`            | Optional, path to the repo on the VPS (defaults to `~/taskora`)          |
+
+`DEPLOY_SSH_PASSPHRASE` only works together with a non-empty `DEPLOY_SSH_KEY`.
+
 
 `GITHUB_TOKEN` is provided automatically and is used to push/pull the GHCR
 image — no personal access token is required.
 
 ### Create a dedicated deploy key
 
-On your workstation (or the server), generate a passphrase-less key just for CI:
+On your workstation, generate a passphrase-protected key for CI:
 
 ```bash
-ssh-keygen -t ed25519 -f taskora_deploy -N "" -C "github-actions-deploy"
+ssh-keygen -t ed25519 -f taskora_deploy -C "github-actions-deploy"
+# enter a passphrase when prompted (this becomes DEPLOY_SSH_PASSPHRASE)
 
 # Authorize it on the VPS
 ssh-copy-id -i taskora_deploy.pub <user>@<vps-host>
 # (or append taskora_deploy.pub to ~/.ssh/authorized_keys on the server)
 ```
 
-Paste the **private** key (`taskora_deploy`) into the `SSH_KEY` secret.
+Paste the **private** key (`taskora_deploy`) into the `DEPLOY_SSH_KEY` secret,
+and set `DEPLOY_SSH_PASSPHRASE` to the passphrase you chose.
 
 ### GHCR image visibility
 
@@ -245,3 +276,4 @@ pulling without auth, make the package public in
 
 - Push to `main`, or
 - **Actions → Deploy → Run workflow** (manual `workflow_dispatch`).
+
