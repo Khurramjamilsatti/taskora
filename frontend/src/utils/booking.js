@@ -87,7 +87,10 @@ export function bookingNextStep(booking, role = 'customer') {
     return { tone: 'warn', title: 'Booking cancelled', detail: 'This booking is closed and no further action is needed.' }
   }
   if (status === 'completed') {
-    return { tone: 'done', title: 'Job completed', detail: 'Thanks — this booking cycle is finished.' }
+    if (role === 'customer' && !booking.feedback) {
+      return { tone: 'warn', title: 'Action needed: leave feedback', detail: 'Rate your provider so others can trust verified professionals.' }
+    }
+    return { tone: 'done', title: 'Job completed', detail: booking.feedback ? 'Feedback submitted — thank you.' : 'This booking cycle is finished.' }
   }
 
   if (role === 'customer') {

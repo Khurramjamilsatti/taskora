@@ -1399,6 +1399,96 @@
   font: inherit;
 }
 
+.db-shell .bk-feedback {
+  margin-top: 18px;
+  border: 1px solid var(--db-border);
+  border-radius: 14px;
+  background: var(--db-surface);
+  padding: 18px;
+}
+.db-shell .bk-feedback-head h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+.db-shell .bk-feedback-head p {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--db-text-muted);
+}
+.db-shell .bk-feedback-done {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(14, 143, 87, 0.08);
+  color: var(--db-text);
+}
+.db-shell .bk-feedback-done strong {
+  color: var(--db-green);
+}
+.db-shell .bk-feedback-done span {
+  font-size: 13px;
+  color: var(--db-text-muted);
+}
+.db-shell .bk-feedback-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+  margin-bottom: 14px;
+}
+.db-shell .bk-feedback-grid label,
+.db-shell .bk-feedback-form > label.full {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.db-shell .bk-feedback-form textarea {
+  width: 100%;
+  border: 1px solid var(--db-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--db-surface-2);
+  color: var(--db-text);
+  font: inherit;
+}
+.db-shell .bk-feedback-recommend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin: 12px 0 16px;
+  font-size: 13px;
+}
+.db-shell .bk-feedback-recommend label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.db-shell .bk-feedback .star-row {
+  display: flex;
+  gap: 4px;
+}
+.db-shell .bk-feedback .star-row button {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  color: var(--db-border);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.db-shell .bk-feedback .star-row button.on {
+  color: var(--db-gold);
+}
+
+@media (max-width: 720px) {
+  .db-shell .bk-feedback-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .db-shell .bk-step {
   display: flex;
   gap: 10px;

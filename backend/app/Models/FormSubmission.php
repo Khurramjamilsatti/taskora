@@ -116,6 +116,7 @@ class FormSubmission extends Model
                 'email' => $this->provider->email,
                 'phone' => $this->provider->phone,
             ] : null,
+            'feedback' => ($this->payload['customer_feedback'] ?? null),
         ];
     }
 }

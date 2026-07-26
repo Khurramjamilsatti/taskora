@@ -14,16 +14,13 @@ const navItems = [
   {
     label: 'Support',
     items: [
-      { to: '/dashboard/provider/support/feedback', label: 'Feedback', icon: '★', match: '/dashboard/provider/support/feedback' },
       { to: '/dashboard/provider/support/complaint', label: 'Complaint', icon: '!', match: '/dashboard/provider/support/complaint' },
-      { to: '/dashboard/provider/support/refund', label: 'Refund', icon: '↺', match: '/dashboard/provider/support/refund' },
       { to: '/dashboard/provider/support/insurance', label: 'Insurance', icon: '◈', match: '/dashboard/provider/support/insurance' },
     ],
   },
   {
     label: 'Growth',
     items: [
-      { to: '/dashboard/provider/catalogue', label: 'Catalogue', icon: '◇', match: '/dashboard/provider/catalogue' },
       { to: '/dashboard/provider/support/company', label: 'Company Signup', icon: '+', match: '/dashboard/provider/support/company' },
     ],
   },

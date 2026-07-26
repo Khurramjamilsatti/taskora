@@ -45,6 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings/{booking}/accept-quote', [BookingController::class, 'acceptQuote']);
     Route::post('/bookings/{booking}/start', [BookingController::class, 'start']);
     Route::post('/bookings/{booking}/complete', [BookingController::class, 'complete']);
+    Route::post('/bookings/{booking}/feedback', [BookingController::class, 'feedback']);
     Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
 
     Route::get('/bookings/{booking}/messages', [ChatController::class, 'index']);

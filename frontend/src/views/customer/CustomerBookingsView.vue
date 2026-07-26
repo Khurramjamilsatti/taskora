@@ -81,6 +81,8 @@ function canCancel(item) {
 function nextHint(item) {
   if (item.status === 'quoted' && item.current_offer_by === 'provider') return 'Accept quotation'
   if (item.status === 'in_progress') return 'Mark completed'
+  if (item.status === 'completed' && !item.feedback) return 'Leave feedback'
+  if (item.status === 'completed') return 'Done'
   if (item.status === 'received') return 'Waiting for provider'
   if (item.status === 'confirmed') return 'Waiting for start'
   return ''

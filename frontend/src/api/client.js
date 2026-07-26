@@ -185,6 +185,13 @@ export function apiCompleteBooking(id, note) {
   })
 }
 
+export function apiSubmitBookingFeedback(id, payload) {
+  return request(`/bookings/${id}/feedback`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
 export function apiBookingMessages(id) {
   return request(`/bookings/${id}/messages`)
 }

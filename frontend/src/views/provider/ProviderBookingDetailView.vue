@@ -240,6 +240,18 @@ async function run(action) {
             :enabled="canChat"
           />
 
+          <div v-if="booking.status === 'completed' && booking.feedback" class="bk-feedback">
+            <div class="bk-feedback-head">
+              <h3>Customer feedback</h3>
+              <p>Rating left after this job was completed.</p>
+            </div>
+            <div class="bk-feedback-done">
+              <strong>✓ {{ booking.feedback.overall || booking.feedback.ratings?.overall || '—' }}/5 overall</strong>
+              <span v-if="booking.feedback.recommend">Recommend: {{ booking.feedback.recommend }}</span>
+              <span v-if="booking.feedback.comments">{{ booking.feedback.comments }}</span>
+            </div>
+          </div>
+
           <div v-if="isOpen || canNegotiate || canStart || canCancel" class="bk-action-box">
             <div v-if="isOpen || canNegotiate" class="bk-grid" style="margin-bottom: 8px;">
               <label>

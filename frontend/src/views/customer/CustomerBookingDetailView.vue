@@ -18,6 +18,7 @@ import {
 } from '../../utils/booking'
 import { confirmAction, toastError, toastSuccess } from '../../composables/useFeedback'
 import BookingChat from '../../components/BookingChat.vue'
+import BookingFeedback from '../../components/BookingFeedback.vue'
 
 const route = useRoute()
 const booking = ref(null)
@@ -122,7 +123,7 @@ async function run(action) {
     }
     if (action === 'complete') {
       res = await apiCompleteBooking(booking.value.id, note.value || undefined)
-      toastSuccess('Job completed', 'Thanks — the booking cycle is finished.')
+      toastSuccess('Job completed', 'Please leave feedback for your provider below.')
     }
     if (action === 'cancel') {
       res = await apiCancelBooking(booking.value.id, note.value || undefined)
@@ -137,6 +138,10 @@ async function run(action) {
   } finally {
     acting.value = false
   }
+}
+
+function onFeedbackSubmitted(updated) {
+  booking.value = updated
 }
 </script>
 
@@ -222,6 +227,12 @@ async function run(action) {
             v-if="booking"
             :booking-id="booking.id"
             :enabled="canChat"
+          />
+
+          <BookingFeedback
+            v-if="booking.status === 'completed'"
+            :booking="booking"
+            @submitted="onFeedbackSubmitted"
           />
 
           <div v-if="canNegotiate || canAcceptQuote || canComplete || canCancel" class="bk-action-box">

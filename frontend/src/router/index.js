@@ -81,18 +81,6 @@ const routes = [
         meta: { title: 'Change password', subtitle: 'Keep your account secure' },
       },
       {
-        path: 'catalogue',
-        name: 'customer-catalogue',
-        component: CatalogueView,
-        meta: { title: 'Catalogue', subtitle: 'Browse verified professions and services' },
-      },
-      {
-        path: 'support/feedback',
-        name: 'customer-feedback',
-        component: FeedbackFormView,
-        meta: { title: 'Feedback', subtitle: 'Rate a completed service' },
-      },
-      {
         path: 'support/complaint',
         name: 'customer-complaint',
         component: ComplaintFormView,
@@ -164,28 +152,10 @@ const routes = [
         meta: { title: 'Change password', subtitle: 'Keep your account secure' },
       },
       {
-        path: 'catalogue',
-        name: 'provider-catalogue',
-        component: CatalogueView,
-        meta: { title: 'Catalogue', subtitle: 'Browse verified professions and services' },
-      },
-      {
-        path: 'support/feedback',
-        name: 'provider-feedback',
-        component: FeedbackFormView,
-        meta: { title: 'Feedback', subtitle: 'Share feedback from a completed job' },
-      },
-      {
         path: 'support/complaint',
         name: 'provider-complaint',
         component: ComplaintFormView,
         meta: { title: 'Complaint', subtitle: 'Report an issue with a booking' },
-      },
-      {
-        path: 'support/refund',
-        name: 'provider-refund',
-        component: RefundFormView,
-        meta: { title: 'Refund', subtitle: 'Request or review a refund' },
       },
       {
         path: 'support/insurance',
@@ -230,9 +200,13 @@ router.beforeEach(async (to) => {
   if (isAuthenticated.value) {
     const role = state.user?.role === 'provider' ? 'provider' : 'customer'
     const formRedirects = {
-      '/forms/feedback': `/dashboard/${role}/support/feedback`,
+      '/forms/feedback': role === 'customer'
+        ? '/dashboard/customer/bookings'
+        : '/dashboard/provider/jobs',
       '/forms/complaint': `/dashboard/${role}/support/complaint`,
-      '/forms/refund': `/dashboard/${role}/support/refund`,
+      '/forms/refund': role === 'customer'
+        ? '/dashboard/customer/support/refund'
+        : '/dashboard/provider',
       '/forms/insurance': `/dashboard/${role}/support/insurance`,
       '/forms/company': role === 'provider'
         ? '/dashboard/provider/support/company'
@@ -240,7 +214,6 @@ router.beforeEach(async (to) => {
       '/forms/booking': role === 'customer'
         ? '/dashboard/customer/book'
         : '/dashboard/provider/requests',
-      '/catalogue': `/dashboard/${role}/catalogue`,
     }
     if (formRedirects[to.path]) {
       return formRedirects[to.path]

@@ -14,16 +14,9 @@ const navItems = [
   {
     label: 'Support',
     items: [
-      { to: '/dashboard/customer/support/feedback', label: 'Feedback', icon: '★', match: '/dashboard/customer/support/feedback' },
       { to: '/dashboard/customer/support/complaint', label: 'Complaint', icon: '!', match: '/dashboard/customer/support/complaint' },
       { to: '/dashboard/customer/support/refund', label: 'Refund', icon: '↺', match: '/dashboard/customer/support/refund' },
       { to: '/dashboard/customer/support/insurance', label: 'Insurance', icon: '◈', match: '/dashboard/customer/support/insurance' },
-    ],
-  },
-  {
-    label: 'Resources',
-    items: [
-      { to: '/dashboard/customer/catalogue', label: 'Catalogue', icon: '◇', match: '/dashboard/customer/catalogue' },
     ],
   },
 ]

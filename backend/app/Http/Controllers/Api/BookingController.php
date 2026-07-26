@@ -453,6 +453,70 @@ class BookingController extends Controller
         ]);
     }
 
+    public function feedback(Request $request, FormSubmission $booking): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! $booking->isBooking()) {
+            return response()->json(['message' => 'Not a booking.'], 404);
+        }
+
+        if (! $user->isCustomer() || $booking->user_id !== $user->id) {
+            return response()->json(['message' => 'Only the customer can leave feedback.'], 403);
+        }
+
+        if ($booking->status !== FormSubmission::STATUS_COMPLETED) {
+            return response()->json(['message' => 'Feedback is only available after the job is completed.'], 422);
+        }
+
+        $payload = $booking->payload ?? [];
+        if (! empty($payload['customer_feedback'])) {
+            return response()->json(['message' => 'Feedback already submitted for this booking.'], 422);
+        }
+
+        $data = $request->validate([
+            'ratings' => ['required', 'array'],
+            'ratings.professionalism' => ['nullable', 'integer', 'min:0', 'max:5'],
+            'ratings.quality' => ['nullable', 'integer', 'min:0', 'max:5'],
+            'ratings.communication' => ['nullable', 'integer', 'min:0', 'max:5'],
+            'ratings.punctuality' => ['nullable', 'integer', 'min:0', 'max:5'],
+            'ratings.cleanliness' => ['nullable', 'integer', 'min:0', 'max:5'],
+            'ratings.behaviour' => ['nullable', 'integer', 'min:0', 'max:5'],
+            'ratings.pricing' => ['nullable', 'integer', 'min:0', 'max:5'],
+            'ratings.overall' => ['required', 'integer', 'min:1', 'max:5'],
+            'comments' => ['nullable', 'string', 'max:2000'],
+            'recommend' => ['nullable', 'string', 'in:Yes,No'],
+        ]);
+
+        $feedback = [
+            'ratings' => $data['ratings'],
+            'overall' => $data['ratings']['overall'],
+            'comments' => $data['comments'] ?? '',
+            'recommend' => $data['recommend'] ?? 'Yes',
+            'submitted_at' => now()->toIso8601String(),
+        ];
+
+        $payload['customer_feedback'] = $feedback;
+        $booking->update(['payload' => $payload]);
+        $booking->load(['user', 'provider']);
+
+        if ($booking->provider) {
+            NotificationService::push(
+                $booking->provider,
+                'feedback',
+                'New feedback · '.$booking->reference,
+                'Customer rated this job '.$feedback['overall'].'/5.',
+                '/dashboard/provider/jobs/'.$booking->id,
+                $booking->id,
+            );
+        }
+
+        return response()->json([
+            'message' => 'Feedback submitted.',
+            'booking' => $booking->toBookingArray(),
+        ]);
+    }
+
     public function cancel(Request $request, FormSubmission $booking): JsonResponse
     {
         $user = $request->user();
