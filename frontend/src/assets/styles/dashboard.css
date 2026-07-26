@@ -1123,14 +1123,119 @@
   flex-wrap: wrap;
 }
 
-.db-shell .bk-success {
-  background: rgba(14, 143, 87, 0.12);
-  border: 1px solid rgba(14, 143, 87, 0.28);
+.db-shell .db-status.ok {
+  background: rgba(14, 143, 87, 0.16);
   color: var(--db-success);
+}
+
+.db-shell .db-status.bad {
+  background: rgba(192, 57, 43, 0.12);
+  color: #c0392b;
+}
+
+.db-shell .bk-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.db-shell .muted-line {
+  display: block;
+  margin-top: 2px;
+  color: var(--db-text-muted);
+  font-size: 11px;
+}
+
+.db-shell .bk-detail-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.db-shell .bk-timeline {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.db-shell .bk-step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
   border-radius: 10px;
-  padding: 12px 16px;
-  margin-bottom: 14px;
-  font-size: 13.5px;
+  border: 1px solid var(--db-border);
+  background: var(--db-surface-2);
+  opacity: 0.55;
+}
+
+.db-shell .bk-step.done,
+.db-shell .bk-step.current {
+  opacity: 1;
+}
+
+.db-shell .bk-step.current {
+  border-color: var(--db-green);
+}
+
+.db-shell .bk-step .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--db-border);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.db-shell .bk-step.done .dot,
+.db-shell .bk-step.current .dot {
+  background: var(--db-green);
+}
+
+.db-shell .bk-step strong {
+  display: block;
+  font-size: 12.5px;
+  color: var(--db-text);
+}
+
+.db-shell .bk-step small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--db-text-muted);
+}
+
+.db-shell .bk-action-box {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--db-border);
+  background: var(--db-surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.db-shell .bk-action-box label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--db-text-muted);
+}
+
+.db-shell .bk-action-box textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--db-border);
+  border-radius: 8px;
+  background: var(--db-surface);
+  color: var(--db-text);
+  font: inherit;
 }
 
 .db-shell .db-overlay { display: none; }
@@ -1204,7 +1309,8 @@
   .db-shell .db-footer-bar,
   .db-shell .db-enablers,
   .db-shell .bk-filters,
-  .db-shell .bk-grid { grid-template-columns: 1fr; }
+  .db-shell .bk-grid,
+  .db-shell .bk-timeline { grid-template-columns: 1fr; }
   .db-shell .db-topbar-actions { display: none; }
   .db-shell .db-donut-row { flex-direction: column; align-items: flex-start; }
 }

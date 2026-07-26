@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../../stores/auth'
-import { apiSubmitForm, ApiError } from '../../api/client'
+import { apiCreateBooking, ApiError } from '../../api/client'
 import { bookableCategories } from '../../data/bookableServices'
 
 const route = useRoute()
@@ -66,10 +66,10 @@ async function submit() {
   loading.value = true
   error.value = ''
   try {
-    const res = await apiSubmitForm('booking', { ...form })
+    const res = await apiCreateBooking({ ...form })
     router.push({
       path: '/dashboard/customer/bookings',
-      query: { ref: res.reference, created: '1' },
+      query: { ref: res.reference, created: '1', id: res.booking?.id },
     })
   } catch (err) {
     error.value = err instanceof ApiError ? err.message : 'Booking failed. Please try again.'
@@ -85,7 +85,7 @@ async function submit() {
       <div class="db-panel-head">
         <div>
           <h2>Book a service</h2>
-          <p>Confirm details and submit your booking request</p>
+          <p>Confirm details and submit your booking request to available providers</p>
         </div>
         <RouterLink to="/dashboard/customer/services" class="db-btn db-btn-ghost">← All services</RouterLink>
       </div>

@@ -1,19 +1,20 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { apiBookingRequests } from '../../api/client'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { apiBookingRequests, apiAcceptBooking, ApiError } from '../../api/client'
+import { statusClass, statusLabel } from '../../utils/booking'
 
+const router = useRouter()
 const requests = ref([])
 const loading = ref(true)
 const error = ref('')
+const actionError = ref('')
+const actingId = ref(null)
 const filters = ref({
   q: '',
-  status: 'All',
   category: 'All',
   urgency: 'All',
 })
-
-const statusOptions = ['All', 'received', 'pending', 'assigned', 'in_progress', 'completed', 'cancelled']
-const urgencyOptions = ['All', 'Normal', 'Urgent', 'Emergency']
 
 const categoryOptions = computed(() => {
   const set = new Set()
@@ -23,13 +24,15 @@ const categoryOptions = computed(() => {
   return ['All', ...[...set].sort()]
 })
 
+const urgencyOptions = ['All', 'Normal', 'Urgent', 'Emergency']
+
 async function load() {
   loading.value = true
   error.value = ''
   try {
     const params = {}
-    if (filters.value.status !== 'All') params.status = filters.value.status
     if (filters.value.q.trim()) params.q = filters.value.q.trim()
+    if (filters.value.category !== 'All') params.category = filters.value.category
     const res = await apiBookingRequests(params)
     requests.value = res.data || []
   } catch (err) {
@@ -41,31 +44,39 @@ async function load() {
 }
 
 onMounted(load)
-watch(() => filters.value.status, load)
 
-const filtered = computed(() => {
-  return requests.value.filter((item) => {
-    const p = item.payload || {}
-    if (filters.value.category !== 'All' && p.category !== filters.value.category) return false
-    if (filters.value.urgency !== 'All' && p.urgency !== filters.value.urgency) return false
+const filtered = computed(() =>
+  requests.value.filter((item) => {
+    if (filters.value.urgency !== 'All' && item.payload?.urgency !== filters.value.urgency) return false
     return true
-  })
-})
+  }),
+)
 
-function statusClass(status) {
-  const s = String(status || '').toLowerCase()
-  if (['pending', 'received', 'assigned', 'in_progress'].includes(s)) return 'warn'
-  return ''
+async function accept(item) {
+  if (!confirm(`Accept booking ${item.reference}? It will move to My Jobs.`)) return
+  actingId.value = item.id
+  actionError.value = ''
+  try {
+    await apiAcceptBooking(item.id)
+    router.push({ path: '/dashboard/provider/jobs', query: { accepted: item.reference } })
+  } catch (err) {
+    actionError.value = err instanceof ApiError ? err.message : 'Accept failed'
+    await load()
+  } finally {
+    actingId.value = null
+  }
 }
 </script>
 
 <template>
   <div>
+    <p v-if="actionError" class="auth-alert">{{ actionError }}</p>
+
     <div class="db-panel">
       <div class="db-panel-head">
         <div>
-          <h2>Booking requests</h2>
-          <p>Customer service requests across the marketplace</p>
+          <h2>Open booking requests</h2>
+          <p>Accept a request to claim the job — then manage it under My Jobs</p>
         </div>
         <button type="button" class="db-btn db-btn-ghost" @click="load">Refresh</button>
       </div>
@@ -78,10 +89,7 @@ function statusClass(status) {
             placeholder="Search reference, service, city…"
             @keyup.enter="load"
           />
-          <select v-model="filters.status" class="bk-input">
-            <option v-for="s in statusOptions" :key="s" :value="s">Status: {{ s }}</option>
-          </select>
-          <select v-model="filters.category" class="bk-input">
+          <select v-model="filters.category" class="bk-input" @change="load">
             <option v-for="c in categoryOptions" :key="c" :value="c">Category: {{ c }}</option>
           </select>
           <select v-model="filters.urgency" class="bk-input">
@@ -96,7 +104,7 @@ function statusClass(status) {
       <div class="db-panel-body" style="padding: 0;">
         <div v-if="loading" class="db-empty">Loading requests…</div>
         <div v-else-if="error" class="db-empty">{{ error }}</div>
-        <div v-else-if="!filtered.length" class="db-empty">No booking requests match your filters.</div>
+        <div v-else-if="!filtered.length" class="db-empty">No open booking requests right now.</div>
         <div v-else class="db-table-wrap">
           <table class="db-dense-table">
             <thead>
@@ -104,23 +112,39 @@ function statusClass(status) {
                 <th>Date</th>
                 <th>Reference</th>
                 <th>Customer</th>
-                <th>Category</th>
                 <th>Service</th>
-                <th>City</th>
                 <th>Urgency</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="item in filtered" :key="item.id">
                 <td>{{ new Date(item.created_at).toLocaleString() }}</td>
                 <td>{{ item.reference }}</td>
-                <td>{{ item.payload?.name || '—' }}</td>
-                <td>{{ item.payload?.category || '—' }}</td>
-                <td>{{ item.payload?.service || '—' }}</td>
-                <td>{{ item.payload?.city || '—' }}</td>
+                <td>
+                  <div>{{ item.payload?.name || item.customer?.name || '—' }}</div>
+                  <small class="muted-line">{{ item.payload?.mobile || item.customer?.phone || '' }}</small>
+                </td>
+                <td>
+                  <div>{{ item.payload?.service || '—' }}</div>
+                  <small class="muted-line">{{ item.payload?.category }} · {{ item.payload?.city }}</small>
+                </td>
                 <td>{{ item.payload?.urgency || '—' }}</td>
-                <td><span class="db-status" :class="statusClass(item.status)">{{ item.status }}</span></td>
+                <td><span class="db-status" :class="statusClass(item.status)">{{ statusLabel(item.status) }}</span></td>
+                <td>
+                  <div class="bk-row-actions">
+                    <RouterLink class="db-btn db-btn-ghost" :to="`/dashboard/provider/requests/${item.id}`">View</RouterLink>
+                    <button
+                      type="button"
+                      class="db-btn db-btn-gold"
+                      :disabled="actingId === item.id"
+                      @click="accept(item)"
+                    >
+                      {{ actingId === item.id ? 'Accepting…' : 'Accept' }}
+                    </button>
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>

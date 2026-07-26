@@ -1,13 +1,17 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { apiMyForms } from '../../api/client'
+import { useRoute, useRouter } from 'vue-router'
+import { apiMyBookings, apiCancelBooking, ApiError } from '../../api/client'
 import { bookableCategories } from '../../data/bookableServices'
+import { BOOKING_STATUSES, statusClass, statusLabel } from '../../utils/booking'
 
 const route = useRoute()
+const router = useRouter()
 const bookings = ref([])
 const loading = ref(true)
 const error = ref('')
+const actionError = ref('')
+const actingId = ref(null)
 
 const filters = ref({
   q: '',
@@ -16,7 +20,7 @@ const filters = ref({
   urgency: 'All',
 })
 
-const statusOptions = ['All', 'received', 'pending', 'assigned', 'in_progress', 'completed', 'cancelled']
+const statusOptions = computed(() => ['All', ...BOOKING_STATUSES])
 const categoryOptions = computed(() => ['All', ...bookableCategories.map((c) => c.title)])
 const urgencyOptions = ['All', 'Normal', 'Urgent', 'Emergency']
 
@@ -27,7 +31,7 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    const res = await apiMyForms('booking')
+    const res = await apiMyBookings()
     bookings.value = res.data || []
   } catch (err) {
     error.value = err.message || 'Failed to load bookings'
@@ -38,6 +42,9 @@ async function load() {
 }
 
 onMounted(load)
+watch(() => route.query.ref, () => {
+  if (route.query.created === '1') load()
+})
 
 const filtered = computed(() => {
   const q = filters.value.q.trim().toLowerCase()
@@ -54,20 +61,34 @@ const filtered = computed(() => {
       p.service,
       p.city,
       p.name,
+      item.provider?.name,
     ].join(' ').toLowerCase()
     return hay.includes(q)
   })
 })
 
-function statusClass(status) {
-  const s = String(status || '').toLowerCase()
-  if (['pending', 'received', 'assigned', 'in_progress'].includes(s)) return 'warn'
-  return ''
+function canCancel(item) {
+  return ['received', 'assigned'].includes(item.status)
 }
 
-watch(() => route.query.ref, () => {
-  if (route.query.created === '1') load()
-})
+async function cancelBooking(item) {
+  if (!canCancel(item)) return
+  if (!confirm(`Cancel booking ${item.reference}?`)) return
+  actingId.value = item.id
+  actionError.value = ''
+  try {
+    await apiCancelBooking(item.id)
+    await load()
+  } catch (err) {
+    actionError.value = err instanceof ApiError ? err.message : 'Cancel failed'
+  } finally {
+    actingId.value = null
+  }
+}
+
+function openDetail(item) {
+  router.push(`/dashboard/customer/bookings/${item.id}`)
+}
 </script>
 
 <template>
@@ -75,21 +96,23 @@ watch(() => route.query.ref, () => {
     <div v-if="justCreated" class="bk-success">
       <strong>Booking submitted.</strong>
       <span v-if="createdRef"> Reference: {{ createdRef }}</span>
+      Providers can now accept your request.
     </div>
+    <p v-if="actionError" class="auth-alert">{{ actionError }}</p>
 
     <div class="db-panel">
       <div class="db-panel-head">
         <div>
           <h2>My bookings</h2>
-          <p>Filter and track every service request</p>
+          <p>Track status from request → accepted → in progress → completed</p>
         </div>
         <RouterLink to="/dashboard/customer/services" class="db-btn db-btn-gold">Book a Service</RouterLink>
       </div>
       <div class="db-panel-body">
         <div class="bk-filters">
-          <input v-model="filters.q" type="search" class="bk-input" placeholder="Search reference, service, city…" />
+          <input v-model="filters.q" type="search" class="bk-input" placeholder="Search reference, service, provider…" />
           <select v-model="filters.status" class="bk-input">
-            <option v-for="s in statusOptions" :key="s" :value="s">Status: {{ s }}</option>
+            <option v-for="s in statusOptions" :key="s" :value="s">Status: {{ s === 'All' ? 'All' : statusLabel(s) }}</option>
           </select>
           <select v-model="filters.category" class="bk-input">
             <option v-for="c in categoryOptions" :key="c" :value="c">Category: {{ c }}</option>
@@ -117,23 +140,37 @@ watch(() => route.query.ref, () => {
               <tr>
                 <th>Date</th>
                 <th>Reference</th>
-                <th>Category</th>
                 <th>Service</th>
-                <th>City</th>
-                <th>Urgency</th>
+                <th>Provider</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="item in filtered" :key="item.id">
                 <td>{{ new Date(item.created_at).toLocaleString() }}</td>
                 <td>{{ item.reference }}</td>
-                <td>{{ item.payload?.category || '—' }}</td>
-                <td>{{ item.payload?.service || '—' }}</td>
-                <td>{{ item.payload?.city || '—' }}</td>
-                <td>{{ item.payload?.urgency || '—' }}</td>
                 <td>
-                  <span class="db-status" :class="statusClass(item.status)">{{ item.status }}</span>
+                  <div>{{ item.payload?.service || '—' }}</div>
+                  <small class="muted-line">{{ item.payload?.category }} · {{ item.payload?.city }}</small>
+                </td>
+                <td>{{ item.provider?.name || 'Waiting for provider' }}</td>
+                <td>
+                  <span class="db-status" :class="statusClass(item.status)">{{ statusLabel(item.status) }}</span>
+                </td>
+                <td>
+                  <div class="bk-row-actions">
+                    <button type="button" class="db-btn db-btn-ghost" @click="openDetail(item)">View</button>
+                    <button
+                      v-if="canCancel(item)"
+                      type="button"
+                      class="db-btn db-btn-ghost"
+                      :disabled="actingId === item.id"
+                      @click="cancelBooking(item)"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>

@@ -115,10 +115,58 @@ export function apiMyForms(type) {
   return request(`/my-forms${qs}`)
 }
 
+export function apiCreateBooking(payload) {
+  return request('/bookings', {
+    method: 'POST',
+    body: JSON.stringify({ payload }),
+  })
+}
+
+export function apiMyBookings() {
+  return request('/bookings')
+}
+
+export function apiGetBooking(id) {
+  return request(`/bookings/${id}`)
+}
+
+export function apiCancelBooking(id, note) {
+  return request(`/bookings/${id}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify(note ? { note } : {}),
+  })
+}
+
 export function apiBookingRequests(params = {}) {
   const query = new URLSearchParams()
-  if (params.status) query.set('status', params.status)
   if (params.q) query.set('q', params.q)
+  if (params.category) query.set('category', params.category)
   const qs = query.toString()
   return request(`/booking-requests${qs ? `?${qs}` : ''}`)
+}
+
+export function apiProviderJobs(status) {
+  const qs = status ? `?status=${encodeURIComponent(status)}` : ''
+  return request(`/provider/jobs${qs}`)
+}
+
+export function apiAcceptBooking(id, note) {
+  return request(`/bookings/${id}/accept`, {
+    method: 'POST',
+    body: JSON.stringify(note ? { note } : {}),
+  })
+}
+
+export function apiStartBooking(id, note) {
+  return request(`/bookings/${id}/start`, {
+    method: 'POST',
+    body: JSON.stringify(note ? { note } : {}),
+  })
+}
+
+export function apiCompleteBooking(id, note) {
+  return request(`/bookings/${id}/complete`, {
+    method: 'POST',
+    body: JSON.stringify(note ? { note } : {}),
+  })
 }

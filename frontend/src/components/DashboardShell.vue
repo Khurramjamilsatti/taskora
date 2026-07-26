@@ -45,7 +45,7 @@ function isActive(item) {
   if (item.to === '/dashboard/customer' || item.to === '/dashboard/provider') {
     return route.path === item.to
   }
-  return route.path === item.to || route.name === item.name
+  return route.path === item.to || route.path.startsWith(`${item.to}/`) || route.name === item.name
 }
 
 function closeMenus() {

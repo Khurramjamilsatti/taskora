@@ -9,10 +9,12 @@ import CustomerOverviewView from '../views/customer/CustomerOverviewView.vue'
 import ServicesBrowseView from '../views/customer/ServicesBrowseView.vue'
 import CustomerBookView from '../views/customer/CustomerBookView.vue'
 import CustomerBookingsView from '../views/customer/CustomerBookingsView.vue'
+import CustomerBookingDetailView from '../views/customer/CustomerBookingDetailView.vue'
 import ProviderOverviewView from '../views/provider/ProviderOverviewView.vue'
 import ProviderRequestsView from '../views/provider/ProviderRequestsView.vue'
 import ProviderJobsView from '../views/provider/ProviderJobsView.vue'
 import ProviderProfileView from '../views/provider/ProviderProfileView.vue'
+import ProviderBookingDetailView from '../views/provider/ProviderBookingDetailView.vue'
 import CatalogueView from '../views/CatalogueView.vue'
 import BookingFormView from '../views/forms/BookingFormView.vue'
 import CompanyFormView from '../views/forms/CompanyFormView.vue'
@@ -59,6 +61,12 @@ const routes = [
         component: CustomerBookingsView,
         meta: { title: 'My Bookings', subtitle: 'Filter and manage your booking list' },
       },
+      {
+        path: 'bookings/:id',
+        name: 'customer-booking-detail',
+        component: CustomerBookingDetailView,
+        meta: { title: 'Booking Details', subtitle: 'Track progress with your provider', match: '/dashboard/customer/bookings' },
+      },
     ],
   },
   {
@@ -76,13 +84,25 @@ const routes = [
         path: 'requests',
         name: 'provider-requests',
         component: ProviderRequestsView,
-        meta: { title: 'Booking Requests', subtitle: 'Incoming customer service requests' },
+        meta: { title: 'Booking Requests', subtitle: 'Accept open customer requests' },
+      },
+      {
+        path: 'requests/:id',
+        name: 'provider-request-detail',
+        component: ProviderBookingDetailView,
+        meta: { title: 'Request Details', subtitle: 'Review and accept this booking' },
       },
       {
         path: 'jobs',
         name: 'provider-jobs',
         component: ProviderJobsView,
-        meta: { title: 'My Jobs', subtitle: 'Assigned work after activation' },
+        meta: { title: 'My Jobs', subtitle: 'Start, complete, or cancel assigned work' },
+      },
+      {
+        path: 'jobs/:id',
+        name: 'provider-job-detail',
+        component: ProviderBookingDetailView,
+        meta: { title: 'Job Details', subtitle: 'Manage your assigned booking' },
       },
       {
         path: 'profile',

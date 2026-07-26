@@ -8,7 +8,7 @@ const navItems = [
       { to: '/dashboard/customer', label: 'Overview', icon: '▣', match: null },
       { to: '/dashboard/customer/services', label: 'Book a Service', icon: '+', match: '/dashboard/customer/services' },
       { to: '/dashboard/customer/bookings', label: 'My Bookings', icon: '☰', match: '/dashboard/customer/bookings' },
-      { to: '/dashboard/customer/book', label: 'New Booking Form', icon: '✎', match: '/dashboard/customer/book' },
+      { to: '/dashboard/customer/book', label: 'New Booking Form', icon: '✎' },
     ],
   },
   {
