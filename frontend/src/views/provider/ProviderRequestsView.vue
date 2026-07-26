@@ -3,12 +3,12 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiBookingRequests, apiAcceptBooking, ApiError } from '../../api/client'
 import { statusClass, statusLabel } from '../../utils/booking'
+import { confirmAction, toastError, toastSuccess } from '../../composables/useFeedback'
 
 const router = useRouter()
 const requests = ref([])
 const loading = ref(true)
 const error = ref('')
-const actionError = ref('')
 const actingId = ref(null)
 const filters = ref({
   q: '',
@@ -38,6 +38,7 @@ async function load() {
   } catch (err) {
     error.value = err.message || 'Failed to load booking requests'
     requests.value = []
+    toastError('Could not load requests', error.value)
   } finally {
     loading.value = false
   }
@@ -53,14 +54,19 @@ const filtered = computed(() =>
 )
 
 async function accept(item) {
-  if (!confirm(`Accept booking ${item.reference}? It will move to My Jobs.`)) return
+  const ok = await confirmAction({
+    title: 'Accept this booking?',
+    message: `${item.reference} will move to My Jobs so you can send a quotation.`,
+    confirmLabel: 'Accept booking',
+  })
+  if (!ok) return
   actingId.value = item.id
-  actionError.value = ''
   try {
     await apiAcceptBooking(item.id)
+    toastSuccess('Booking accepted', `${item.reference} is now in My Jobs.`)
     router.push({ path: '/dashboard/provider/jobs', query: { accepted: item.reference } })
   } catch (err) {
-    actionError.value = err instanceof ApiError ? err.message : 'Accept failed'
+    toastError('Accept failed', err instanceof ApiError ? err.message : 'Please try again')
     await load()
   } finally {
     actingId.value = null
@@ -70,13 +76,11 @@ async function accept(item) {
 
 <template>
   <div>
-    <p v-if="actionError" class="auth-alert">{{ actionError }}</p>
-
     <div class="db-panel">
       <div class="db-panel-head">
         <div>
           <h2>Open booking requests</h2>
-          <p>Accept a request to claim the job — then manage it under My Jobs</p>
+          <p>Accept a request → quote → customer accepts deal → you start</p>
         </div>
         <button type="button" class="db-btn db-btn-ghost" @click="load">Refresh</button>
       </div>

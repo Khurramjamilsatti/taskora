@@ -19,7 +19,9 @@ onMounted(async () => {
     openCount.value = (requests.data || []).length
     const list = jobs.data || []
     jobCount.value = list.length
-    activeCount.value = list.filter((j) => ['assigned', 'in_progress'].includes(j.status)).length
+    activeCount.value = list.filter((j) =>
+      ['assigned', 'quoted', 'confirmed', 'in_progress'].includes(j.status),
+    ).length
   } catch {
     // keep zeros
   }
@@ -90,7 +92,7 @@ onMounted(async () => {
           </RouterLink>
           <RouterLink class="db-action" to="/dashboard/provider/jobs">
             <strong>Manage my jobs</strong>
-            <span>Start and complete assigned bookings</span>
+            <span>Quote, start, and track until the customer completes</span>
           </RouterLink>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth, dashboardPathFor } from '../stores/auth'
 import { ApiError } from '../api/client'
+import { toastError, toastSuccess } from '../composables/useFeedback'
 
 const router = useRouter()
 const route = useRoute()
@@ -23,14 +24,17 @@ async function submit() {
   generalError.value = ''
   try {
     const user = await login(form.value)
+    toastSuccess('Welcome back', user.name ? `Signed in as ${user.name}` : 'You are signed in.')
     const redirect = route.query.redirect || dashboardPathFor(user)
     router.push(redirect)
   } catch (err) {
     if (err instanceof ApiError) {
       errors.value = err.errors
       if (!Object.keys(err.errors).length) generalError.value = err.message
+      toastError('Sign in failed', err.message)
     } else {
       generalError.value = 'Something went wrong. Please try again.'
+      toastError('Sign in failed', generalError.value)
     }
   } finally {
     loading.value = false

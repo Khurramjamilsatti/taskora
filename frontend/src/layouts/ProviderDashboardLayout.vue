@@ -11,14 +11,6 @@ const navItems = [
       { to: '/dashboard/provider/settings/profile', label: 'Profile', icon: '◎', match: '/dashboard/provider/settings' },
     ],
   },
-  {
-    label: 'Growth',
-    items: [
-      { to: '/catalogue', label: 'Catalogue', icon: '◇' },
-      { to: '/forms/company', label: 'Company Signup', icon: '+' },
-      { to: '/', label: 'Website', icon: '←' },
-    ],
-  },
 ]
 </script>
 

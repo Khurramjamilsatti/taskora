@@ -4,13 +4,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { apiMyBookings, apiCancelBooking, ApiError } from '../../api/client'
 import { bookableCategories } from '../../data/bookableServices'
 import { BOOKING_STATUSES, formatMoney, statusClass, statusLabel } from '../../utils/booking'
+import { confirmAction, toastError, toastSuccess } from '../../composables/useFeedback'
 
 const route = useRoute()
 const router = useRouter()
 const bookings = ref([])
 const loading = ref(true)
 const error = ref('')
-const actionError = ref('')
 const actingId = ref(null)
 
 const filters = ref({
@@ -24,9 +24,6 @@ const statusOptions = computed(() => ['All', ...BOOKING_STATUSES])
 const categoryOptions = computed(() => ['All', ...bookableCategories.map((c) => c.title)])
 const urgencyOptions = ['All', 'Normal', 'Urgent', 'Emergency']
 
-const justCreated = computed(() => route.query.created === '1')
-const createdRef = computed(() => route.query.ref || '')
-
 async function load() {
   loading.value = true
   error.value = ''
@@ -36,12 +33,22 @@ async function load() {
   } catch (err) {
     error.value = err.message || 'Failed to load bookings'
     bookings.value = []
+    toastError('Could not load bookings', error.value)
   } finally {
     loading.value = false
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  if (route.query.created === '1') {
+    toastSuccess(
+      'Booking submitted',
+      route.query.ref ? `Reference ${route.query.ref}. Providers can accept it now.` : 'Providers can accept your request now.',
+    )
+    router.replace({ path: route.path, query: {} })
+  }
+})
 watch(() => route.query.ref, () => {
   if (route.query.created === '1') load()
 })
@@ -71,16 +78,30 @@ function canCancel(item) {
   return ['received', 'assigned', 'quoted', 'confirmed'].includes(item.status)
 }
 
+function nextHint(item) {
+  if (item.status === 'quoted' && item.current_offer_by === 'provider') return 'Accept quotation'
+  if (item.status === 'in_progress') return 'Mark completed'
+  if (item.status === 'received') return 'Waiting for provider'
+  if (item.status === 'confirmed') return 'Waiting for start'
+  return ''
+}
+
 async function cancelBooking(item) {
   if (!canCancel(item)) return
-  if (!confirm(`Cancel booking ${item.reference}?`)) return
+  const ok = await confirmAction({
+    title: 'Cancel this booking?',
+    message: `Reference ${item.reference} will be cancelled.`,
+    confirmLabel: 'Cancel booking',
+    danger: true,
+  })
+  if (!ok) return
   actingId.value = item.id
-  actionError.value = ''
   try {
     await apiCancelBooking(item.id)
+    toastSuccess('Booking cancelled', item.reference)
     await load()
   } catch (err) {
-    actionError.value = err instanceof ApiError ? err.message : 'Cancel failed'
+    toastError('Cancel failed', err instanceof ApiError ? err.message : 'Please try again')
   } finally {
     actingId.value = null
   }
@@ -93,18 +114,11 @@ function openDetail(item) {
 
 <template>
   <div>
-    <div v-if="justCreated" class="bk-success">
-      <strong>Booking submitted.</strong>
-      <span v-if="createdRef"> Reference: {{ createdRef }}</span>
-      Providers can now accept your request.
-    </div>
-    <p v-if="actionError" class="auth-alert">{{ actionError }}</p>
-
     <div class="db-panel">
       <div class="db-panel-head">
         <div>
           <h2>My bookings</h2>
-          <p>Track status from request → accepted → in progress → completed</p>
+          <p>Request → provider → quotation → deal → start → you complete</p>
         </div>
         <RouterLink to="/dashboard/customer/services" class="db-btn db-btn-gold">Book a Service</RouterLink>
       </div>
@@ -144,6 +158,7 @@ function openDetail(item) {
                 <th>Provider</th>
                 <th>Budget / Deal</th>
                 <th>Status</th>
+                <th>Next</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -165,6 +180,7 @@ function openDetail(item) {
                 <td>
                   <span class="db-status" :class="statusClass(item.status)">{{ statusLabel(item.status) }}</span>
                 </td>
+                <td><small class="muted-line">{{ nextHint(item) || '—' }}</small></td>
                 <td>
                   <div class="bk-row-actions">
                     <button type="button" class="db-btn db-btn-ghost" @click="openDetail(item)">View</button>

@@ -1,10 +1,9 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { apiChangePassword, ApiError } from '../../api/client'
+import { toastError, toastSuccess } from '../../composables/useFeedback'
 
 const saving = ref(false)
-const message = ref('')
-const error = ref('')
 const errors = ref({})
 
 const form = reactive({
@@ -15,21 +14,19 @@ const form = reactive({
 
 async function save() {
   saving.value = true
-  message.value = ''
-  error.value = ''
   errors.value = {}
   try {
-    const res = await apiChangePassword({ ...form })
-    message.value = res.message || 'Password changed.'
+    await apiChangePassword({ ...form })
     form.current_password = ''
     form.password = ''
     form.password_confirmation = ''
+    toastSuccess('Password updated', 'Use your new password next time you sign in.')
   } catch (err) {
     if (err instanceof ApiError) {
-      error.value = err.message
       errors.value = err.errors || {}
+      toastError('Could not change password', err.message)
     } else {
-      error.value = 'Failed to change password'
+      toastError('Could not change password', 'Please try again.')
     }
   } finally {
     saving.value = false
@@ -46,9 +43,6 @@ async function save() {
       </div>
     </div>
     <div class="db-panel-body">
-      <p v-if="message" class="bk-success">{{ message }}</p>
-      <p v-if="error" class="auth-alert">{{ error }}</p>
-
       <form class="bk-form" @submit.prevent="save">
         <div class="bk-section">
           <div class="bk-grid">

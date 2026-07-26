@@ -11,22 +11,6 @@ const navItems = [
       { to: '/dashboard/customer/book', label: 'New Booking Form', icon: '✎' },
     ],
   },
-  {
-    label: 'Support',
-    items: [
-      { to: '/forms/feedback', label: 'Feedback', icon: '★' },
-      { to: '/forms/complaint', label: 'Complaint', icon: '!' },
-      { to: '/forms/refund', label: 'Refund', icon: '↺' },
-      { to: '/forms/insurance', label: 'Insurance', icon: '◈' },
-    ],
-  },
-  {
-    label: 'More',
-    items: [
-      { to: '/catalogue', label: 'Catalogue', icon: '◇' },
-      { to: '/', label: 'Website', icon: '←' },
-    ],
-  },
 ]
 </script>
 

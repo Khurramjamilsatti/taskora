@@ -8,6 +8,7 @@ import {
   apiMarkNotificationRead,
   apiMarkAllNotificationsRead,
 } from '../api/client'
+import { toastSuccess } from '../composables/useFeedback'
 
 const props = defineProps({
   role: { type: String, required: true },
@@ -29,6 +30,9 @@ let notifTimer = null
 
 const settingsBase = computed(() =>
   props.role === 'provider' ? '/dashboard/provider/settings' : '/dashboard/customer/settings',
+)
+const homeTo = computed(() =>
+  props.role === 'provider' ? '/dashboard/provider' : '/dashboard/customer',
 )
 
 const initials = computed(() => {
@@ -128,6 +132,7 @@ async function markAllRead() {
 async function handleLogout() {
   closeMenus()
   await logout()
+  toastSuccess('Signed out', 'See you next time.')
   router.push('/login')
 }
 
@@ -151,7 +156,7 @@ onBeforeUnmount(() => {
     <div class="db-overlay" @click="sidebarOpen = false" />
 
     <aside class="db-sidebar">
-      <RouterLink to="/" class="db-sidebar-brand" @click="sidebarOpen = false">
+      <RouterLink :to="homeTo" class="db-sidebar-brand" @click="sidebarOpen = false">
         <img src="/taskora-icon.png" alt="Taskora" />
         <div>
           <div class="word">TASKORA</div>

@@ -3,11 +3,10 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useAuth } from '../../stores/auth'
 import { apiUpdateProfile, ApiError } from '../../api/client'
 import { bookableCategories } from '../../data/bookableServices'
+import { toastError, toastSuccess } from '../../composables/useFeedback'
 
 const { state, fetchUser } = useAuth()
 const saving = ref(false)
-const message = ref('')
-const error = ref('')
 const errors = ref({})
 
 const isProvider = computed(() => state.user?.role === 'provider')
@@ -44,8 +43,6 @@ watch(() => state.user, hydrate, { deep: true })
 
 async function save() {
   saving.value = true
-  message.value = ''
-  error.value = ''
   errors.value = {}
   try {
     const payload = {
@@ -66,13 +63,13 @@ async function save() {
     const res = await apiUpdateProfile(payload)
     state.user = res.user
     await fetchUser()
-    message.value = res.message || 'Profile updated.'
+    toastSuccess('Profile updated', 'Your account details have been saved.')
   } catch (err) {
     if (err instanceof ApiError) {
-      error.value = err.message
       errors.value = err.errors || {}
+      toastError('Update failed', err.message)
     } else {
-      error.value = 'Failed to update profile'
+      toastError('Update failed', 'Please try again.')
     }
   } finally {
     saving.value = false
@@ -89,9 +86,6 @@ async function save() {
       </div>
     </div>
     <div class="db-panel-body">
-      <p v-if="message" class="bk-success">{{ message }}</p>
-      <p v-if="error" class="auth-alert">{{ error }}</p>
-
       <form class="bk-form" @submit.prevent="save">
         <div class="bk-section">
           <h3>Account</h3>

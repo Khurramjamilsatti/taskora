@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { apiBookingMessages, apiSendBookingMessage, ApiError } from '../api/client'
+import { toastError } from '../composables/useFeedback'
 
 const props = defineProps({
   bookingId: { type: [Number, String], required: true },
@@ -28,6 +29,7 @@ async function load() {
     scrollBottom()
   } catch (err) {
     error.value = err instanceof ApiError ? err.message : 'Failed to load chat'
+    toastError('Chat unavailable', error.value)
   } finally {
     loading.value = false
   }
@@ -62,6 +64,7 @@ async function send() {
     scrollBottom()
   } catch (err) {
     error.value = err instanceof ApiError ? err.message : 'Failed to send'
+    toastError('Message not sent', error.value)
   } finally {
     sending.value = false
   }

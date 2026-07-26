@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth, dashboardPathFor } from '../stores/auth'
 import { ApiError } from '../api/client'
+import { toastError, toastSuccess } from '../composables/useFeedback'
 
 const router = useRouter()
 const { registerProvider } = useAuth()
@@ -53,13 +54,16 @@ async function submit() {
       experience_years: form.value.experience_years === '' ? null : Number(form.value.experience_years),
     }
     const user = await registerProvider(payload)
+    toastSuccess('Welcome to Taskora', 'Your provider account is ready.')
     router.push(dashboardPathFor(user))
   } catch (err) {
     if (err instanceof ApiError) {
       errors.value = err.errors
       if (!Object.keys(err.errors).length) generalError.value = err.message
+      toastError('Registration failed', err.message)
     } else {
       generalError.value = 'Something went wrong. Please try again.'
+      toastError('Registration failed', generalError.value)
     }
   } finally {
     loading.value = false

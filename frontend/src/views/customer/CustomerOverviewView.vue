@@ -53,29 +53,39 @@ const serviceCount = computed(() =>
       <div class="db-panel-head">
         <div>
           <h2>How booking works</h2>
-          <p>Three steps from need to confirmed request</p>
+          <p>From request to completed job</p>
         </div>
       </div>
       <div class="db-panel-body">
         <div class="db-flow wrap">
           <div class="db-flow-step">
             <div class="bubble">1</div>
-            <div class="txt">Choose a service</div>
+            <div class="txt">Book a service</div>
             <div class="arrow">→</div>
           </div>
           <div class="db-flow-step">
             <div class="bubble">2</div>
-            <div class="txt">Negotiate budget</div>
+            <div class="txt">Provider accepts</div>
             <div class="arrow">→</div>
           </div>
           <div class="db-flow-step">
             <div class="bubble">3</div>
-            <div class="txt">Accept quotation</div>
+            <div class="txt">Agree on price</div>
             <div class="arrow">→</div>
           </div>
           <div class="db-flow-step">
             <div class="bubble">4</div>
-            <div class="txt">Confirm completion</div>
+            <div class="txt">Accept deal & chat</div>
+            <div class="arrow">→</div>
+          </div>
+          <div class="db-flow-step">
+            <div class="bubble">5</div>
+            <div class="txt">Provider starts</div>
+            <div class="arrow">→</div>
+          </div>
+          <div class="db-flow-step">
+            <div class="bubble">6</div>
+            <div class="txt">You mark completed</div>
           </div>
         </div>
         <div class="db-action-grid" style="margin-top: 18px;">

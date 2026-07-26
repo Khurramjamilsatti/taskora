@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   apiGetBooking,
@@ -9,7 +9,14 @@ import {
   apiCompleteBooking,
   ApiError,
 } from '../../api/client'
-import { bookingTimeline, formatMoney, statusClass, statusLabel } from '../../utils/booking'
+import {
+  bookingNextStep,
+  bookingTimeline,
+  formatMoney,
+  statusClass,
+  statusLabel,
+} from '../../utils/booking'
+import { confirmAction, toastError, toastSuccess } from '../../composables/useFeedback'
 import BookingChat from '../../components/BookingChat.vue'
 
 const route = useRoute()
@@ -19,29 +26,44 @@ const error = ref('')
 const acting = ref(false)
 const offerAmount = ref('')
 const note = ref('')
+let pollTimer = null
 
-async function load() {
-  loading.value = true
-  error.value = ''
+async function load({ silent = false } = {}) {
+  if (!silent) {
+    loading.value = true
+    error.value = ''
+  }
   try {
     const res = await apiGetBooking(route.params.id)
     booking.value = res.booking
-    if (res.booking?.current_offer != null) {
-      offerAmount.value = String(res.booking.current_offer)
-    } else if (res.booking?.customer_budget != null) {
-      offerAmount.value = String(res.booking.customer_budget)
+    if (!silent) {
+      if (res.booking?.current_offer != null) {
+        offerAmount.value = String(res.booking.current_offer)
+      } else if (res.booking?.customer_budget != null) {
+        offerAmount.value = String(res.booking.customer_budget)
+      }
     }
   } catch (err) {
-    error.value = err.message || 'Failed to load booking'
-    booking.value = null
+    if (!silent) {
+      error.value = err.message || 'Failed to load booking'
+      booking.value = null
+      toastError('Could not load booking', error.value)
+    }
   } finally {
-    loading.value = false
+    if (!silent) loading.value = false
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  pollTimer = setInterval(() => load({ silent: true }), 12000)
+})
+onBeforeUnmount(() => {
+  if (pollTimer) clearInterval(pollTimer)
+})
 
 const timeline = computed(() => (booking.value ? bookingTimeline(booking.value) : []))
+const nextStep = computed(() => bookingNextStep(booking.value, 'customer'))
 const canCancel = computed(() =>
   ['received', 'assigned', 'quoted', 'confirmed'].includes(booking.value?.status),
 )
@@ -57,6 +79,33 @@ const offers = computed(() => [...(booking.value?.offers || [])].reverse())
 
 async function run(action) {
   if (!booking.value) return
+
+  if (action === 'accept-quote') {
+    const ok = await confirmAction({
+      title: 'Accept this quotation?',
+      message: `Lock the deal at ${formatMoney(booking.value.current_offer)}. The provider can then start the job.`,
+      confirmLabel: 'Accept deal',
+    })
+    if (!ok) return
+  }
+  if (action === 'complete') {
+    const ok = await confirmAction({
+      title: 'Mark job completed?',
+      message: 'Confirm only when the work is finished to your satisfaction. This closes the booking.',
+      confirmLabel: 'Yes, completed',
+    })
+    if (!ok) return
+  }
+  if (action === 'cancel') {
+    const ok = await confirmAction({
+      title: 'Cancel this booking?',
+      message: `Reference ${booking.value.reference} will be cancelled for both sides.`,
+      confirmLabel: 'Cancel booking',
+      danger: true,
+    })
+    if (!ok) return
+  }
+
   acting.value = true
   error.value = ''
   try {
@@ -65,22 +114,26 @@ async function run(action) {
       const amount = Number(offerAmount.value)
       if (!amount && amount !== 0) throw new Error('Enter a valid budget amount')
       res = await apiProposeBudget(booking.value.id, amount, note.value || undefined)
+      toastSuccess('Budget sent', `Your offer ${formatMoney(amount)} is with the provider.`)
     }
     if (action === 'accept-quote') {
       res = await apiAcceptQuote(booking.value.id, note.value || undefined)
+      toastSuccess('Deal locked', 'Chat is open. The provider can start the job.')
     }
     if (action === 'complete') {
-      if (!confirm('Confirm this job is completed?')) return
       res = await apiCompleteBooking(booking.value.id, note.value || undefined)
+      toastSuccess('Job completed', 'Thanks — the booking cycle is finished.')
     }
     if (action === 'cancel') {
-      if (!confirm(`Cancel booking ${booking.value.reference}?`)) return
       res = await apiCancelBooking(booking.value.id, note.value || undefined)
+      toastSuccess('Booking cancelled', booking.value.reference)
     }
     booking.value = res.booking
     note.value = ''
   } catch (err) {
-    error.value = err instanceof ApiError ? err.message : (err.message || 'Action failed')
+    const msg = err instanceof ApiError ? err.message : (err.message || 'Action failed')
+    error.value = msg
+    toastError('Action failed', msg)
   } finally {
     acting.value = false
   }
@@ -93,7 +146,7 @@ async function run(action) {
       <div class="db-panel-head">
         <div>
           <h2>Booking details</h2>
-          <p v-if="booking">{{ booking.reference }}</p>
+          <p v-if="booking">{{ booking.reference }} · {{ statusLabel(booking.status) }}</p>
         </div>
         <RouterLink to="/dashboard/customer/bookings" class="db-btn db-btn-ghost">← Back to list</RouterLink>
       </div>
@@ -101,7 +154,6 @@ async function run(action) {
         <div v-if="loading" class="db-empty">Loading…</div>
         <div v-else-if="error && !booking" class="db-empty">{{ error }}</div>
         <template v-else-if="booking">
-          <p v-if="error" class="auth-alert">{{ error }}</p>
           <div class="bk-detail-top">
             <span class="db-status" :class="statusClass(booking.status)">{{ statusLabel(booking.status) }}</span>
             <div class="bk-money-pills">
@@ -110,6 +162,14 @@ async function run(action) {
                 <em v-if="booking.current_offer_by">({{ booking.current_offer_by }})</em>
               </span>
               <span>Deal: <strong>{{ formatMoney(booking.deal_amount) }}</strong></span>
+            </div>
+          </div>
+
+          <div v-if="nextStep" class="bk-next" :class="nextStep.tone">
+            <div class="bk-next-ico">→</div>
+            <div>
+              <strong>{{ nextStep.title }}</strong>
+              <span>{{ nextStep.detail }}</span>
             </div>
           </div>
 
@@ -181,7 +241,7 @@ async function run(action) {
             </label>
             <div class="bk-row-actions">
               <button v-if="canNegotiate" type="button" class="db-btn db-btn-primary" :disabled="acting" @click="run('propose')">
-                Update budget
+                {{ acting ? 'Sending…' : 'Send counter / budget' }}
               </button>
               <button v-if="canAcceptQuote" type="button" class="db-btn db-btn-gold" :disabled="acting" @click="run('accept-quote')">
                 Accept quotation {{ formatMoney(booking.current_offer) }}
@@ -192,9 +252,8 @@ async function run(action) {
               <button v-if="canCancel" type="button" class="db-btn db-btn-ghost" :disabled="acting" @click="run('cancel')">
                 Cancel booking
               </button>
-              <button type="button" class="db-btn db-btn-ghost" @click="load">Refresh</button>
+              <button type="button" class="db-btn db-btn-ghost" @click="load()">Refresh</button>
             </div>
-            <p v-if="canAcceptQuote" class="bk-hint">Accepting locks the deal. The provider can then start the job. Only you can mark it completed.</p>
           </div>
         </template>
       </div>

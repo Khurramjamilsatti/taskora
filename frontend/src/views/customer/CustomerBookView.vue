@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../../stores/auth'
 import { apiCreateBooking, ApiError } from '../../api/client'
 import { bookableCategories } from '../../data/bookableServices'
+import { toastError } from '../../composables/useFeedback'
 
 const route = useRoute()
 const router = useRouter()
@@ -73,6 +74,7 @@ async function submit() {
     })
   } catch (err) {
     error.value = err instanceof ApiError ? err.message : 'Booking failed. Please try again.'
+    toastError('Booking failed', error.value)
   } finally {
     loading.value = false
   }
