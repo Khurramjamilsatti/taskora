@@ -29,7 +29,7 @@ return [
         'lede' => 'Taskora connects you with 10,000+ verified professionals across 100+ service categories — home, business, and property — booked in minutes, tracked in real time.',
         'ctas' => [
             ['label' => 'Download the App', 'href' => '#download', 'variant' => 'gold'],
-            ['label' => 'Explore Services', 'href' => '#services', 'variant' => 'ghost'],
+            ['label' => 'Explore Services', 'href' => '/catalogue', 'variant' => 'ghost'],
         ],
         'stats' => [
             ['value' => '16+', 'label' => 'Categories'],
@@ -357,10 +357,10 @@ return [
         'description' => "Pakistan's digital platform for trusted, verified home, business, and property services — all from one app.",
         'columns' => [
             ['title' => 'Services', 'links' => [
-                ['label' => 'Home Services', 'href' => '#services'],
-                ['label' => 'Home Maintenance', 'href' => '#services'],
-                ['label' => 'Architecture & Design', 'href' => '#services'],
-                ['label' => 'Construction', 'href' => '#services'],
+                ['label' => 'Home Services', 'href' => '/catalogue'],
+                ['label' => 'Home Maintenance', 'href' => '/catalogue'],
+                ['label' => 'Architecture & Design', 'href' => '/catalogue'],
+                ['label' => 'Construction', 'href' => '/catalogue'],
             ]],
             ['title' => 'Solutions', 'links' => [
                 ['label' => 'Business', 'href' => '#business'],

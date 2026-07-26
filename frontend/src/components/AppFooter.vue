@@ -2,6 +2,15 @@
 defineProps({
   footer: Object,
 })
+
+function isRoute(href) {
+  return href === '#services' || href?.startsWith('/')
+}
+
+function linkTo(href) {
+  if (href === '#services') return '/catalogue'
+  return href
+}
 </script>
 
 <template>
@@ -19,7 +28,8 @@ defineProps({
           <h5>{{ column.title }}</h5>
           <ul>
             <li v-for="link in column.links" :key="link.label">
-              <a :href="link.href">{{ link.label }}</a>
+              <RouterLink v-if="isRoute(link.href)" :to="linkTo(link.href)">{{ link.label }}</RouterLink>
+              <a v-else :href="link.href">{{ link.label }}</a>
             </li>
           </ul>
         </div>

@@ -2,6 +2,15 @@
 defineProps({
   hero: Object,
 })
+
+function isRoute(href) {
+  return href === '#services' || href?.startsWith('/')
+}
+
+function linkTo(href) {
+  if (href === '#services') return '/catalogue'
+  return href
+}
 </script>
 
 <template>
@@ -16,15 +25,24 @@ defineProps({
         </h1>
         <p class="lede">{{ hero.lede }}</p>
         <div class="hero-ctas">
-          <a
-            v-for="cta in hero.ctas"
-            :key="cta.label"
-            :href="cta.href"
-            class="btn"
-            :class="cta.variant === 'gold' ? 'btn-gold' : 'btn-ghost'"
-          >
-            {{ cta.label }}
-          </a>
+          <template v-for="cta in hero.ctas" :key="cta.label">
+            <RouterLink
+              v-if="isRoute(cta.href)"
+              :to="linkTo(cta.href)"
+              class="btn"
+              :class="cta.variant === 'gold' ? 'btn-gold' : 'btn-ghost'"
+            >
+              {{ cta.label }}
+            </RouterLink>
+            <a
+              v-else
+              :href="cta.href"
+              class="btn"
+              :class="cta.variant === 'gold' ? 'btn-gold' : 'btn-ghost'"
+            >
+              {{ cta.label }}
+            </a>
+          </template>
         </div>
         <div class="hero-mini-stats">
           <div v-for="stat in hero.stats" :key="stat.label">
