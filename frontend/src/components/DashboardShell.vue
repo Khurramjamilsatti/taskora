@@ -3,12 +3,13 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../stores/auth'
 import { useTheme } from '../composables/useTheme'
+import { serviceCategories } from '../data/dashboardContent'
 
 const props = defineProps({
   role: { type: String, required: true },
   title: { type: String, required: true },
   subtitle: { type: String, default: '' },
-  navSections: { type: Array, default: () => [] },
+  navItems: { type: Array, default: () => [] },
   section: { type: String, default: 'overview' },
 })
 
@@ -66,9 +67,7 @@ async function handleLogout() {
 }
 
 function onDocClick(event) {
-  if (!topbarRef.value?.contains(event.target)) {
-    closeMenus()
-  }
+  if (!topbarRef.value?.contains(event.target)) closeMenus()
 }
 
 onMounted(() => document.addEventListener('click', onDocClick))
@@ -89,35 +88,36 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
       </RouterLink>
 
       <div class="db-sidebar-scroll">
-        <div
-          v-for="(group, gi) in navSections"
-          :key="gi"
-          class="db-nav-group"
-        >
-          <div v-if="group.label" class="db-nav-label">{{ group.label }}</div>
-          <div class="db-nav-list">
-            <template v-for="item in group.items" :key="item.id || item.href">
-              <button
-                v-if="item.id"
-                type="button"
-                class="db-nav-item"
-                :class="{ active: section === item.id }"
-                @click="selectSection(item.id)"
-              >
-                <span class="ico" aria-hidden="true">{{ item.icon }}</span>
-                <span class="label">{{ item.label }}</span>
-              </button>
-              <RouterLink
-                v-else
-                :to="item.href"
-                class="db-nav-item"
-                @click="sidebarOpen = false"
-              >
-                <span class="ico" aria-hidden="true">{{ item.icon }}</span>
-                <span class="label">{{ item.label }}</span>
-              </RouterLink>
-            </template>
-          </div>
+        <div class="db-nav-label">Workspace</div>
+        <div class="db-nav-list">
+          <button
+            v-for="item in navItems"
+            :key="item.id"
+            type="button"
+            class="db-nav-item"
+            :class="{ active: section === item.id }"
+            @click="selectSection(item.id)"
+          >
+            <span class="ico">{{ item.icon }}</span>
+            <span class="label">{{ item.label }}</span>
+          </button>
+        </div>
+
+        <div class="db-nav-label">15+ Categories · Core Services</div>
+        <div class="db-cat-list">
+          <RouterLink
+            v-for="cat in serviceCategories"
+            :key="cat.n"
+            to="/catalogue"
+            class="db-cat-item"
+            @click="sidebarOpen = false"
+          >
+            <span class="num">{{ cat.n }}</span>
+            <span class="txt">
+              <strong>{{ cat.title }}</strong>
+              <small>{{ cat.hint }}</small>
+            </span>
+          </RouterLink>
         </div>
       </div>
     </aside>
@@ -125,9 +125,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
     <div class="db-main">
       <header ref="topbarRef" class="db-topbar">
         <div class="db-topbar-left">
-          <button type="button" class="db-menu-btn" aria-label="Open menu" @click="sidebarOpen = true">
-            ☰
-          </button>
+          <button type="button" class="db-menu-btn" aria-label="Open menu" @click="sidebarOpen = true">☰</button>
           <div>
             <h1>{{ title }}</h1>
             <p v-if="subtitle">{{ subtitle }}</p>
@@ -140,47 +138,23 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
           </div>
 
           <div class="db-dd" :class="{ open: themeOpen }">
-            <button
-              type="button"
-              class="db-dd-trigger db-theme-trigger"
-              aria-haspopup="listbox"
-              :aria-expanded="themeOpen"
-              @click.stop="toggleThemeMenu"
-            >
+            <button type="button" class="db-dd-trigger db-theme-trigger" @click.stop="toggleThemeMenu">
               <span class="db-dd-ico">{{ theme === 'dark' ? '☾' : '☀' }}</span>
               <span class="db-dd-text">{{ theme === 'dark' ? 'Dark' : 'Light' }}</span>
               <span class="db-caret">▾</span>
             </button>
-            <div v-if="themeOpen" class="db-dd-menu" role="listbox">
-              <button
-                type="button"
-                class="db-dd-option"
-                :class="{ active: theme === 'light' }"
-                @click="chooseTheme('light')"
-              >
-                <span>☀ Light</span>
-                <span v-if="theme === 'light'" class="check">✓</span>
+            <div v-if="themeOpen" class="db-dd-menu">
+              <button type="button" class="db-dd-option" :class="{ active: theme === 'light' }" @click="chooseTheme('light')">
+                <span>☀ Light</span><span v-if="theme === 'light'" class="check">✓</span>
               </button>
-              <button
-                type="button"
-                class="db-dd-option"
-                :class="{ active: theme === 'dark' }"
-                @click="chooseTheme('dark')"
-              >
-                <span>☾ Dark</span>
-                <span v-if="theme === 'dark'" class="check">✓</span>
+              <button type="button" class="db-dd-option" :class="{ active: theme === 'dark' }" @click="chooseTheme('dark')">
+                <span>☾ Dark</span><span v-if="theme === 'dark'" class="check">✓</span>
               </button>
             </div>
           </div>
 
           <div class="db-dd" :class="{ open: profileOpen }">
-            <button
-              type="button"
-              class="db-dd-trigger db-profile-trigger"
-              aria-haspopup="menu"
-              :aria-expanded="profileOpen"
-              @click.stop="toggleProfileMenu"
-            >
+            <button type="button" class="db-dd-trigger db-profile-trigger" @click.stop="toggleProfileMenu">
               <span class="db-avatar sm">{{ initials }}</span>
               <span class="db-profile-meta">
                 <span class="nm">{{ firstName }}</span>
@@ -188,7 +162,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
               </span>
               <span class="db-caret">▾</span>
             </button>
-            <div v-if="profileOpen" class="db-dd-menu db-profile-menu" role="menu">
+            <div v-if="profileOpen" class="db-dd-menu db-profile-menu">
               <div class="db-dd-head">
                 <div class="db-avatar">{{ initials }}</div>
                 <div>
@@ -197,31 +171,12 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
                 </div>
               </div>
               <div class="db-dd-divider" />
-              <RouterLink
-                to="/"
-                class="db-dd-option"
-                role="menuitem"
-                @click="closeMenus"
-              >
-                Back to website
-              </RouterLink>
-              <button
-                type="button"
-                class="db-dd-option"
-                role="menuitem"
-                @click="toggleTheme(); closeMenus()"
-              >
+              <RouterLink to="/" class="db-dd-option" @click="closeMenus">Back to website</RouterLink>
+              <button type="button" class="db-dd-option" @click="toggleTheme(); closeMenus()">
                 Switch to {{ theme === 'light' ? 'dark' : 'light' }} theme
               </button>
               <div class="db-dd-divider" />
-              <button
-                type="button"
-                class="db-dd-option danger"
-                role="menuitem"
-                @click="handleLogout"
-              >
-                Log out
-              </button>
+              <button type="button" class="db-dd-option danger" @click="handleLogout">Log out</button>
             </div>
           </div>
         </div>
