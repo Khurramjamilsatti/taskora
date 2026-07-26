@@ -8,7 +8,7 @@ const navItems = [
       { to: '/dashboard/provider', label: 'Overview', icon: '▣' },
       { to: '/dashboard/provider/requests', label: 'Booking Requests', icon: '◷', match: '/dashboard/provider/requests' },
       { to: '/dashboard/provider/jobs', label: 'My Jobs', icon: '☰', match: '/dashboard/provider/jobs' },
-      { to: '/dashboard/provider/profile', label: 'Profile', icon: '◎', match: '/dashboard/provider/profile' },
+      { to: '/dashboard/provider/settings/profile', label: 'Profile', icon: '◎', match: '/dashboard/provider/settings' },
     ],
   },
   {

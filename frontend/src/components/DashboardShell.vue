@@ -3,6 +3,11 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../stores/auth'
 import { useTheme } from '../composables/useTheme'
+import {
+  apiNotifications,
+  apiMarkNotificationRead,
+  apiMarkAllNotificationsRead,
+} from '../api/client'
 
 const props = defineProps({
   role: { type: String, required: true },
@@ -12,11 +17,19 @@ const props = defineProps({
 const route = useRoute()
 const router = useRouter()
 const { state, logout } = useAuth()
-const { theme, setTheme, toggleTheme } = useTheme()
+const { theme, setTheme } = useTheme()
 const sidebarOpen = ref(false)
 const themeOpen = ref(false)
 const profileOpen = ref(false)
+const notifOpen = ref(false)
 const topbarRef = ref(null)
+const notifications = ref([])
+const unread = ref(0)
+let notifTimer = null
+
+const settingsBase = computed(() =>
+  props.role === 'provider' ? '/dashboard/provider/settings' : '/dashboard/customer/settings',
+)
 
 const initials = computed(() => {
   const name = state.user?.name || 'U'
@@ -51,21 +64,65 @@ function isActive(item) {
 function closeMenus() {
   themeOpen.value = false
   profileOpen.value = false
+  notifOpen.value = false
 }
 
 function toggleThemeMenu() {
   profileOpen.value = false
+  notifOpen.value = false
   themeOpen.value = !themeOpen.value
 }
 
 function toggleProfileMenu() {
   themeOpen.value = false
+  notifOpen.value = false
   profileOpen.value = !profileOpen.value
+}
+
+async function toggleNotifMenu() {
+  themeOpen.value = false
+  profileOpen.value = false
+  notifOpen.value = !notifOpen.value
+  if (notifOpen.value) await loadNotifications()
 }
 
 function chooseTheme(value) {
   setTheme(value)
   themeOpen.value = false
+}
+
+async function loadNotifications() {
+  try {
+    const res = await apiNotifications()
+    notifications.value = res.data || []
+    unread.value = res.unread || 0
+  } catch {
+    // ignore
+  }
+}
+
+async function openNotification(item) {
+  try {
+    if (!item.read_at) {
+      await apiMarkNotificationRead(item.id)
+      item.read_at = new Date().toISOString()
+      unread.value = Math.max(0, unread.value - 1)
+    }
+  } catch {
+    // ignore
+  }
+  notifOpen.value = false
+  if (item.link) router.push(item.link)
+}
+
+async function markAllRead() {
+  try {
+    await apiMarkAllNotificationsRead()
+    notifications.value = notifications.value.map((n) => ({ ...n, read_at: n.read_at || new Date().toISOString() }))
+    unread.value = 0
+  } catch {
+    // ignore
+  }
 }
 
 async function handleLogout() {
@@ -78,8 +135,15 @@ function onDocClick(event) {
   if (!topbarRef.value?.contains(event.target)) closeMenus()
 }
 
-onMounted(() => document.addEventListener('click', onDocClick))
-onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
+onMounted(() => {
+  document.addEventListener('click', onDocClick)
+  loadNotifications()
+  notifTimer = setInterval(loadNotifications, 20000)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocClick)
+  if (notifTimer) clearInterval(notifTimer)
+})
 </script>
 
 <template>
@@ -130,6 +194,37 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
             <slot name="actions" />
           </div>
 
+          <div class="db-dd" :class="{ open: notifOpen }">
+            <button
+              type="button"
+              class="db-dd-trigger db-notif-trigger"
+              aria-label="Notifications"
+              @click.stop="toggleNotifMenu"
+            >
+              <span class="db-dd-ico">🔔</span>
+              <span v-if="unread" class="db-notif-badge">{{ unread > 9 ? '9+' : unread }}</span>
+            </button>
+            <div v-if="notifOpen" class="db-dd-menu db-notif-menu">
+              <div class="db-notif-head">
+                <strong>Notifications</strong>
+                <button v-if="unread" type="button" class="linkish" @click="markAllRead">Mark all read</button>
+              </div>
+              <div v-if="!notifications.length" class="db-empty" style="padding: 16px;">No notifications yet.</div>
+              <button
+                v-for="item in notifications"
+                :key="item.id"
+                type="button"
+                class="db-notif-item"
+                :class="{ unread: !item.read_at }"
+                @click="openNotification(item)"
+              >
+                <strong>{{ item.title }}</strong>
+                <span>{{ item.body }}</span>
+                <small>{{ new Date(item.created_at).toLocaleString() }}</small>
+              </button>
+            </div>
+          </div>
+
           <div class="db-dd" :class="{ open: themeOpen }">
             <button type="button" class="db-dd-trigger db-theme-trigger" @click.stop="toggleThemeMenu">
               <span class="db-dd-ico">{{ theme === 'dark' ? '☾' : '☀' }}</span>
@@ -164,10 +259,12 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
                 </div>
               </div>
               <div class="db-dd-divider" />
-              <RouterLink to="/" class="db-dd-option" @click="closeMenus">Back to website</RouterLink>
-              <button type="button" class="db-dd-option" @click="toggleTheme(); closeMenus()">
-                Switch to {{ theme === 'light' ? 'dark' : 'light' }} theme
-              </button>
+              <RouterLink :to="`${settingsBase}/profile`" class="db-dd-option" @click="closeMenus">
+                Profile settings
+              </RouterLink>
+              <RouterLink :to="`${settingsBase}/password`" class="db-dd-option" @click="closeMenus">
+                Change password
+              </RouterLink>
               <div class="db-dd-divider" />
               <button type="button" class="db-dd-option danger" @click="handleLogout">Log out</button>
             </div>

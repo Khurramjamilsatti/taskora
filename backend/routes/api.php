@@ -3,8 +3,11 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CatalogueController;
+use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\EstimateController;
 use App\Http\Controllers\Api\FormSubmissionController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SiteController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,7 +27,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/my-forms', [FormSubmissionController::class, 'mine']);
 
-    // Booking lifecycle
+    Route::put('/profile', [ProfileController::class, 'update']);
+    Route::post('/profile/password', [ProfileController::class, 'changePassword']);
+
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
+
     Route::post('/bookings', [BookingController::class, 'store']);
     Route::get('/bookings', [BookingController::class, 'mine']);
     Route::get('/bookings/{booking}', [BookingController::class, 'show']);
@@ -37,4 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings/{booking}/start', [BookingController::class, 'start']);
     Route::post('/bookings/{booking}/complete', [BookingController::class, 'complete']);
     Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
+
+    Route::get('/bookings/{booking}/messages', [ChatController::class, 'index']);
+    Route::post('/bookings/{booking}/messages', [ChatController::class, 'store']);
 });

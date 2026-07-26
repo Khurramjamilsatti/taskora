@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\FormSubmission;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -231,6 +232,20 @@ class BookingController extends Controller
         $booking->update($updates);
         $booking->load(['user', 'provider']);
 
+        if ($booking->user) {
+            $hasQuote = isset($data['amount']);
+            NotificationService::push(
+                $booking->user,
+                'booking',
+                $hasQuote ? 'Provider sent a quotation' : 'Provider accepted your booking',
+                $hasQuote
+                    ? $user->name.' quoted PKR '.number_format((float) $data['amount']).' on '.$booking->reference
+                    : $user->name.' accepted '.$booking->reference.'. You can negotiate the budget.',
+                '/dashboard/customer/bookings/'.$booking->id,
+                $booking->id,
+            );
+        }
+
         return response()->json([
             'message' => isset($data['amount'])
                 ? 'Booking accepted with quotation.'
@@ -294,6 +309,28 @@ class BookingController extends Controller
         $booking->update($updates);
         $booking->load(['user', 'provider']);
 
+        if ($by === 'provider' && $booking->user) {
+            NotificationService::push(
+                $booking->user,
+                'quote',
+                'New quotation on '.$booking->reference,
+                'Provider quoted PKR '.number_format($amount).'. Review and accept to unlock chat.',
+                '/dashboard/customer/bookings/'.$booking->id,
+                $booking->id,
+            );
+        }
+
+        if ($by === 'customer' && $booking->provider) {
+            NotificationService::push(
+                $booking->provider,
+                'budget',
+                'Customer updated budget on '.$booking->reference,
+                'New budget: PKR '.number_format($amount),
+                '/dashboard/provider/jobs/'.$booking->id,
+                $booking->id,
+            );
+        }
+
         return response()->json([
             'message' => $by === 'provider'
                 ? 'Quotation sent to customer.'
@@ -342,8 +379,19 @@ class BookingController extends Controller
 
         $booking->load(['user', 'provider']);
 
+        if ($booking->provider) {
+            NotificationService::push(
+                $booking->provider,
+                'deal',
+                'Deal accepted on '.$booking->reference,
+                'Customer accepted your quotation (PKR '.number_format((float) $booking->deal_amount).'). Chat is now open.',
+                '/dashboard/provider/jobs/'.$booking->id,
+                $booking->id,
+            );
+        }
+
         return response()->json([
-            'message' => 'Deal finalized. Provider can now start the job.',
+            'message' => 'Deal finalized. Chat is unlocked and the provider can start the job.',
             'booking' => $booking->toBookingArray(),
         ]);
     }
@@ -387,6 +435,17 @@ class BookingController extends Controller
         ]);
 
         $booking->load(['user', 'provider']);
+
+        if ($booking->provider) {
+            NotificationService::push(
+                $booking->provider,
+                'completed',
+                'Job completed · '.$booking->reference,
+                'Customer marked this job as completed.',
+                '/dashboard/provider/jobs/'.$booking->id,
+                $booking->id,
+            );
+        }
 
         return response()->json([
             'message' => 'Job marked as completed.',
@@ -474,6 +533,17 @@ class BookingController extends Controller
         ], $extra));
 
         $booking->load(['user', 'provider']);
+
+        if ($to === FormSubmission::STATUS_IN_PROGRESS && $booking->user) {
+            NotificationService::push(
+                $booking->user,
+                'started',
+                'Job started · '.$booking->reference,
+                'Your provider has started the job.',
+                '/dashboard/customer/bookings/'.$booking->id,
+                $booking->id,
+            );
+        }
 
         return response()->json([
             'message' => $message,

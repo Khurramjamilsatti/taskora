@@ -10,6 +10,7 @@ import {
   ApiError,
 } from '../../api/client'
 import { bookingTimeline, formatMoney, statusClass, statusLabel } from '../../utils/booking'
+import BookingChat from '../../components/BookingChat.vue'
 
 const route = useRoute()
 const booking = ref(null)
@@ -49,6 +50,9 @@ const canAcceptQuote = computed(() =>
   booking.value?.status === 'quoted' && booking.value?.current_offer_by === 'provider',
 )
 const canComplete = computed(() => booking.value?.status === 'in_progress')
+const canChat = computed(() =>
+  ['confirmed', 'in_progress', 'completed'].includes(booking.value?.status),
+)
 const offers = computed(() => [...(booking.value?.offers || [])].reverse())
 
 async function run(action) {
@@ -153,6 +157,12 @@ async function run(action) {
               </div>
             </div>
           </div>
+
+          <BookingChat
+            v-if="booking"
+            :booking-id="booking.id"
+            :enabled="canChat"
+          />
 
           <div v-if="canNegotiate || canAcceptQuote || canComplete || canCancel" class="bk-action-box">
             <div v-if="canNegotiate" class="bk-grid" style="margin-bottom: 8px;">

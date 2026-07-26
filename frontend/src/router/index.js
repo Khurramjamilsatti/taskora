@@ -13,8 +13,9 @@ import CustomerBookingDetailView from '../views/customer/CustomerBookingDetailVi
 import ProviderOverviewView from '../views/provider/ProviderOverviewView.vue'
 import ProviderRequestsView from '../views/provider/ProviderRequestsView.vue'
 import ProviderJobsView from '../views/provider/ProviderJobsView.vue'
-import ProviderProfileView from '../views/provider/ProviderProfileView.vue'
 import ProviderBookingDetailView from '../views/provider/ProviderBookingDetailView.vue'
+import ProfileSettingsView from '../views/account/ProfileSettingsView.vue'
+import ChangePasswordView from '../views/account/ChangePasswordView.vue'
 import CatalogueView from '../views/CatalogueView.vue'
 import BookingFormView from '../views/forms/BookingFormView.vue'
 import CompanyFormView from '../views/forms/CompanyFormView.vue'
@@ -67,6 +68,18 @@ const routes = [
         component: CustomerBookingDetailView,
         meta: { title: 'Booking Details', subtitle: 'Track progress with your provider', match: '/dashboard/customer/bookings' },
       },
+      {
+        path: 'settings/profile',
+        name: 'customer-profile-settings',
+        component: ProfileSettingsView,
+        meta: { title: 'Profile settings', subtitle: 'Update your account details' },
+      },
+      {
+        path: 'settings/password',
+        name: 'customer-change-password',
+        component: ChangePasswordView,
+        meta: { title: 'Change password', subtitle: 'Keep your account secure' },
+      },
     ],
   },
   {
@@ -106,9 +119,19 @@ const routes = [
       },
       {
         path: 'profile',
-        name: 'provider-profile',
-        component: ProviderProfileView,
-        meta: { title: 'Profile', subtitle: 'Your professional details' },
+        redirect: '/dashboard/provider/settings/profile',
+      },
+      {
+        path: 'settings/profile',
+        name: 'provider-profile-settings',
+        component: ProfileSettingsView,
+        meta: { title: 'Profile settings', subtitle: 'Update your professional details' },
+      },
+      {
+        path: 'settings/password',
+        name: 'provider-change-password',
+        component: ChangePasswordView,
+        meta: { title: 'Change password', subtitle: 'Keep your account secure' },
       },
     ],
   },

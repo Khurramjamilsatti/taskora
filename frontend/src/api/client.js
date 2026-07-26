@@ -184,3 +184,40 @@ export function apiCompleteBooking(id, note) {
     body: JSON.stringify(note ? { note } : {}),
   })
 }
+
+export function apiBookingMessages(id) {
+  return request(`/bookings/${id}/messages`)
+}
+
+export function apiSendBookingMessage(id, body) {
+  return request(`/bookings/${id}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ body }),
+  })
+}
+
+export function apiNotifications() {
+  return request('/notifications')
+}
+
+export function apiMarkNotificationRead(id) {
+  return request(`/notifications/${id}/read`, { method: 'POST' })
+}
+
+export function apiMarkAllNotificationsRead() {
+  return request('/notifications/read-all', { method: 'POST' })
+}
+
+export function apiUpdateProfile(payload) {
+  return request('/profile', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function apiChangePassword(payload) {
+  return request('/profile/password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
