@@ -1,20 +1,15 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../stores/auth'
 import { useTheme } from '../composables/useTheme'
-import { serviceCategories } from '../data/dashboardContent'
 
 const props = defineProps({
   role: { type: String, required: true },
-  title: { type: String, required: true },
-  subtitle: { type: String, default: '' },
   navItems: { type: Array, default: () => [] },
-  section: { type: String, default: 'overview' },
 })
 
-const emit = defineEmits(['update:section'])
-
+const route = useRoute()
 const router = useRouter()
 const { state, logout } = useAuth()
 const { theme, setTheme, toggleTheme } = useTheme()
@@ -34,10 +29,23 @@ const initials = computed(() => {
 
 const roleLabel = computed(() => (props.role === 'provider' ? 'Provider' : 'Customer'))
 const firstName = computed(() => state.user?.name?.split(' ')[0] || 'Account')
+const title = computed(() => {
+  const hit = [...route.matched].reverse().find((r) => r.meta?.title)
+  return hit?.meta.title || `${roleLabel.value} workspace`
+})
+const subtitle = computed(() => {
+  const hit = [...route.matched].reverse().find((r) => r.meta?.subtitle)
+  return hit?.meta.subtitle || ''
+})
 
-function selectSection(id) {
-  emit('update:section', id)
-  sidebarOpen.value = false
+function isActive(item) {
+  if (item.match) {
+    return route.path === item.match || route.path.startsWith(`${item.match}/`)
+  }
+  if (item.to === '/dashboard/customer' || item.to === '/dashboard/provider') {
+    return route.path === item.to
+  }
+  return route.path === item.to || route.name === item.name
 }
 
 function closeMenus() {
@@ -83,42 +91,27 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
         <img src="/taskora-icon.png" alt="Taskora" />
         <div>
           <div class="word">TASKORA</div>
-          <div class="sub">{{ roleLabel }} workspace</div>
+          <div class="sub">{{ roleLabel }} booking</div>
         </div>
       </RouterLink>
 
       <div class="db-sidebar-scroll">
-        <div class="db-nav-label">Workspace</div>
-        <div class="db-nav-list">
-          <button
-            v-for="item in navItems"
-            :key="item.id"
-            type="button"
-            class="db-nav-item"
-            :class="{ active: section === item.id }"
-            @click="selectSection(item.id)"
-          >
-            <span class="ico">{{ item.icon }}</span>
-            <span class="label">{{ item.label }}</span>
-          </button>
-        </div>
-
-        <div class="db-nav-label">15+ Categories · Core Services</div>
-        <div class="db-cat-list">
-          <RouterLink
-            v-for="cat in serviceCategories"
-            :key="cat.n"
-            to="/catalogue"
-            class="db-cat-item"
-            @click="sidebarOpen = false"
-          >
-            <span class="num">{{ cat.n }}</span>
-            <span class="txt">
-              <strong>{{ cat.title }}</strong>
-              <small>{{ cat.hint }}</small>
-            </span>
-          </RouterLink>
-        </div>
+        <template v-for="(group, gi) in navItems" :key="gi">
+          <div v-if="group.label" class="db-nav-label">{{ group.label }}</div>
+          <div class="db-nav-list">
+            <RouterLink
+              v-for="item in group.items"
+              :key="item.to"
+              :to="item.to"
+              class="db-nav-item"
+              :class="{ active: isActive(item) }"
+              @click="sidebarOpen = false"
+            >
+              <span class="ico">{{ item.icon }}</span>
+              <span class="label">{{ item.label }}</span>
+            </RouterLink>
+          </div>
+        </template>
       </div>
     </aside>
 

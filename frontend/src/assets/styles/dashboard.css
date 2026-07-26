@@ -1012,6 +1012,127 @@
   color: rgba(255, 255, 255, 0.65);
 }
 
+/* Booking app UI */
+.db-shell .bk-filters {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, minmax(140px, 1fr)) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.db-shell .bk-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--db-border);
+  border-radius: 8px;
+  background: var(--db-surface-2);
+  color: var(--db-text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.db-shell .bk-input:focus {
+  outline: 2px solid var(--db-green);
+  outline-offset: 1px;
+}
+
+.db-shell .svc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.db-shell .svc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--db-border);
+  background: var(--db-surface-2);
+  text-decoration: none;
+  color: var(--db-text);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.db-shell .svc-card:hover {
+  border-color: var(--db-green);
+  transform: translateY(-1px);
+}
+
+.db-shell .svc-card strong {
+  font-size: 13.5px;
+  line-height: 1.35;
+}
+
+.db-shell .svc-card span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--db-green);
+}
+
+.db-shell .bk-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.db-shell .bk-section h3 {
+  font-family: var(--db-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--db-green);
+  margin: 0 0 12px;
+}
+
+.db-shell .bk-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 14px;
+}
+
+.db-shell .bk-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--db-text-muted);
+}
+
+.db-shell .bk-grid label.full {
+  grid-column: 1 / -1;
+}
+
+.db-shell .bk-grid input,
+.db-shell .bk-grid select,
+.db-shell .bk-grid textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--db-border);
+  border-radius: 8px;
+  background: var(--db-surface-2);
+  color: var(--db-text);
+  font: inherit;
+  font-size: 13.5px;
+}
+
+.db-shell .bk-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.db-shell .bk-success {
+  background: rgba(14, 143, 87, 0.12);
+  border: 1px solid rgba(14, 143, 87, 0.28);
+  color: var(--db-success);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  font-size: 13.5px;
+}
+
 .db-shell .db-overlay { display: none; }
 
 @media (max-width: 1200px) {
@@ -1081,7 +1202,9 @@
   .db-shell .db-layout-b,
   .db-shell .db-highlights,
   .db-shell .db-footer-bar,
-  .db-shell .db-enablers { grid-template-columns: 1fr; }
+  .db-shell .db-enablers,
+  .db-shell .bk-filters,
+  .db-shell .bk-grid { grid-template-columns: 1fr; }
   .db-shell .db-topbar-actions { display: none; }
   .db-shell .db-donut-row { flex-direction: column; align-items: flex-start; }
 }

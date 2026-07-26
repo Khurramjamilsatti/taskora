@@ -43,16 +43,68 @@ class FormSubmissionController extends Controller
             'message' => 'Submission received.',
             'reference' => $submission->reference,
             'type' => $submission->type,
+            'id' => $submission->id,
         ], 201);
     }
 
     public function mine(Request $request): JsonResponse
     {
-        $items = FormSubmission::query()
+        $type = $request->query('type');
+
+        $query = FormSubmission::query()
             ->where('user_id', $request->user()->id)
-            ->latest()
-            ->limit(50)
-            ->get(['id', 'type', 'reference', 'status', 'created_at']);
+            ->latest();
+
+        if ($type) {
+            $query->where('type', $type);
+        }
+
+        $items = $query
+            ->limit(100)
+            ->get(['id', 'type', 'reference', 'status', 'payload', 'created_at']);
+
+        return response()->json(['data' => $items]);
+    }
+
+    public function bookingRequests(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'provider') {
+            return response()->json(['message' => 'Only providers can view booking requests.'], 403);
+        }
+
+        $status = $request->query('status');
+        $search = trim((string) $request->query('q', ''));
+
+        $query = FormSubmission::query()
+            ->where('type', 'booking')
+            ->latest();
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $items = $query
+            ->limit(100)
+            ->get(['id', 'type', 'reference', 'status', 'payload', 'user_id', 'created_at']);
+
+        if ($search !== '') {
+            $needle = Str::lower($search);
+            $items = $items->filter(function (FormSubmission $item) use ($needle) {
+                $payload = $item->payload ?? [];
+                $hay = Str::lower(implode(' ', [
+                    $item->reference,
+                    $item->status,
+                    $payload['category'] ?? '',
+                    $payload['service'] ?? '',
+                    $payload['city'] ?? '',
+                    $payload['name'] ?? '',
+                ]));
+
+                return str_contains($hay, $needle);
+            })->values();
+        }
 
         return response()->json(['data' => $items]);
     }

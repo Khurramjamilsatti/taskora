@@ -3,8 +3,16 @@ import HomePage from '../components/HomePage.vue'
 import LoginView from '../views/LoginView.vue'
 import CustomerRegisterView from '../views/CustomerRegisterView.vue'
 import ProviderRegisterView from '../views/ProviderRegisterView.vue'
-import CustomerDashboardView from '../views/CustomerDashboardView.vue'
-import ProviderDashboardView from '../views/ProviderDashboardView.vue'
+import CustomerDashboardLayout from '../layouts/CustomerDashboardLayout.vue'
+import ProviderDashboardLayout from '../layouts/ProviderDashboardLayout.vue'
+import CustomerOverviewView from '../views/customer/CustomerOverviewView.vue'
+import ServicesBrowseView from '../views/customer/ServicesBrowseView.vue'
+import CustomerBookView from '../views/customer/CustomerBookView.vue'
+import CustomerBookingsView from '../views/customer/CustomerBookingsView.vue'
+import ProviderOverviewView from '../views/provider/ProviderOverviewView.vue'
+import ProviderRequestsView from '../views/provider/ProviderRequestsView.vue'
+import ProviderJobsView from '../views/provider/ProviderJobsView.vue'
+import ProviderProfileView from '../views/provider/ProviderProfileView.vue'
 import CatalogueView from '../views/CatalogueView.vue'
 import BookingFormView from '../views/forms/BookingFormView.vue'
 import CompanyFormView from '../views/forms/CompanyFormView.vue'
@@ -21,21 +29,68 @@ const routes = [
   { path: '/register', redirect: '/register/customer' },
   { path: '/register/customer', name: 'register-customer', component: CustomerRegisterView, meta: { guestOnly: true } },
   { path: '/register/provider', name: 'register-provider', component: ProviderRegisterView, meta: { guestOnly: true } },
-  { path: '/dashboard', redirect: (to) => {
-    // resolved in beforeEach once auth is ready
-    return '/dashboard/customer'
-  }},
+  { path: '/dashboard', redirect: '/dashboard/customer' },
   {
     path: '/dashboard/customer',
-    name: 'dashboard-customer',
-    component: CustomerDashboardView,
+    component: CustomerDashboardLayout,
     meta: { requiresAuth: true, role: 'customer' },
+    children: [
+      {
+        path: '',
+        name: 'dashboard-customer',
+        component: CustomerOverviewView,
+        meta: { title: 'Overview', subtitle: 'Book services and track your requests' },
+      },
+      {
+        path: 'services',
+        name: 'customer-services',
+        component: ServicesBrowseView,
+        meta: { title: 'Book a Service', subtitle: 'Choose a service to start booking' },
+      },
+      {
+        path: 'book',
+        name: 'customer-book',
+        component: CustomerBookView,
+        meta: { title: 'New Booking', subtitle: 'Fill in details to confirm your request' },
+      },
+      {
+        path: 'bookings',
+        name: 'customer-bookings',
+        component: CustomerBookingsView,
+        meta: { title: 'My Bookings', subtitle: 'Filter and manage your booking list' },
+      },
+    ],
   },
   {
     path: '/dashboard/provider',
-    name: 'dashboard-provider',
-    component: ProviderDashboardView,
+    component: ProviderDashboardLayout,
     meta: { requiresAuth: true, role: 'provider' },
+    children: [
+      {
+        path: '',
+        name: 'dashboard-provider',
+        component: ProviderOverviewView,
+        meta: { title: 'Overview', subtitle: 'Requests, jobs, and profile' },
+      },
+      {
+        path: 'requests',
+        name: 'provider-requests',
+        component: ProviderRequestsView,
+        meta: { title: 'Booking Requests', subtitle: 'Incoming customer service requests' },
+      },
+      {
+        path: 'jobs',
+        name: 'provider-jobs',
+        component: ProviderJobsView,
+        meta: { title: 'My Jobs', subtitle: 'Assigned work after activation' },
+      },
+      {
+        path: 'profile',
+        name: 'provider-profile',
+        component: ProviderProfileView,
+        meta: { title: 'Profile', subtitle: 'Your professional details' },
+      },
+    ],
   },
   { path: '/forms/booking', name: 'form-booking', component: BookingFormView },
   { path: '/forms/company', name: 'form-company', component: CompanyFormView },
@@ -62,15 +117,19 @@ router.beforeEach(async (to) => {
     return dashboardPathFor(state.user)
   }
 
-  if (to.meta.requiresAuth && !isAuthenticated.value) {
+  const requiresAuth = to.matched.some((r) => r.meta.requiresAuth)
+  const role = to.matched.map((r) => r.meta.role).find(Boolean)
+  const guestOnly = to.matched.some((r) => r.meta.guestOnly)
+
+  if (requiresAuth && !isAuthenticated.value) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
 
-  if (to.meta.role && state.user?.role && to.meta.role !== state.user.role) {
+  if (role && state.user?.role && role !== state.user.role) {
     return dashboardPathFor(state.user)
   }
 
-  if (to.meta.guestOnly && isAuthenticated.value) {
+  if (guestOnly && isAuthenticated.value) {
     return dashboardPathFor(state.user)
   }
 

@@ -110,6 +110,15 @@ export function apiSubmitForm(type, payload) {
   })
 }
 
-export function apiMyForms() {
-  return request('/my-forms')
+export function apiMyForms(type) {
+  const qs = type ? `?type=${encodeURIComponent(type)}` : ''
+  return request(`/my-forms${qs}`)
+}
+
+export function apiBookingRequests(params = {}) {
+  const query = new URLSearchParams()
+  if (params.status) query.set('status', params.status)
+  if (params.q) query.set('q', params.q)
+  const qs = query.toString()
+  return request(`/booking-requests${qs ? `?${qs}` : ''}`)
 }

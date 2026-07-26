@@ -22,4 +22,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/my-forms', [FormSubmissionController::class, 'mine']);
+    Route::get('/booking-requests', [FormSubmissionController::class, 'bookingRequests']);
 });
