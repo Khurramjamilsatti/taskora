@@ -19,5 +19,6 @@ defineProps({
         <span class="more">View all →</span>
       </div>
     </div>
+    <div v-if="section.disclaimer" class="market-flow-note">{{ section.disclaimer }}</div>
   </section>
 </template>

@@ -37,7 +37,13 @@ const donutGradient = computed(() => {
             <span class="pct">{{ stream.percent }}%</span>
           </div>
         </div>
-        <div class="biz-note">{{ section.note }}</div>
+        <div
+          v-for="note in (section.notes || [section.note]).filter(Boolean)"
+          :key="note"
+          class="biz-note"
+        >
+          {{ note }}
+        </div>
       </div>
     </div>
   </section>

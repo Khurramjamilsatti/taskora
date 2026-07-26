@@ -354,6 +354,25 @@
   .footer-col p{font-size:13px; max-width:260px; color:rgba(255,255,255,0.5);}
   .footer-bottom{border-top:1px solid rgba(255,255,255,0.15); padding-top:24px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.04em;}
 
+  /* ---------- MARKET STORE ---------- */
+  .market-cat-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--line); border:1px solid var(--line);}
+  .market-cat{background:var(--white); padding:20px 16px; display:flex; align-items:center; gap:12px;}
+  .market-cat .hex{width:32px; height:32px; flex-shrink:0; background:var(--green); clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);}
+  .market-cat:nth-child(4n+2) .hex{background:var(--green-dark);}
+  .market-cat:nth-child(4n+3) .hex{background:var(--black);}
+  .market-cat:nth-child(4n+4) .hex{background:var(--gold);}
+  .market-cat .t{font-size:13px; font-weight:700; color:var(--black);}
+  .price-table-wrap{width:100%; overflow-x:auto;}
+  .price-table{width:100%; border-collapse:collapse; background:var(--white); border:1px solid var(--line);}
+  .price-table th{background:var(--green-deep); color:var(--white); font-family:'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; padding:13px 14px; text-align:right; font-weight:600;}
+  .price-table th:first-child{text-align:left; background:var(--black);}
+  .price-table td{padding:13px 14px; text-align:right; font-family:'IBM Plex Mono', monospace; font-size:13px; border-bottom:1px solid var(--line);}
+  .price-table td:first-child{text-align:left; font-family:'Inter', sans-serif; font-weight:700; font-size:13.5px; color:var(--black);}
+  .price-table tr:nth-child(even) td{background:var(--paper-2);}
+  .price-table td.save{color:var(--green); font-weight:700;}
+  .market-flow-note{font-size:12px; color:rgba(18,32,26,0.45); font-family:'IBM Plex Mono', monospace; margin-top:16px;}
+  .market-route{grid-template-columns:repeat(5,1fr);}
+
   /* ---------- RESPONSIVE ---------- */
   @media (max-width:900px){
     .nav-links{display:none;}
@@ -364,7 +383,10 @@
     .services-grid{grid-template-columns:1fr;}
     .kn-grid{grid-template-columns:repeat(2,1fr);}
     .flow-step{flex:1 1 45%; border-bottom:1px solid var(--line);}
+    .market-cat-grid{grid-template-columns:repeat(2,1fr);}
+    .price-table{font-size:11px; white-space:nowrap;}
     .route{grid-template-columns:repeat(3,1fr); row-gap:28px;}
+    .market-route{grid-template-columns:repeat(2,1fr);}
     .route::before{display:none;}
     .solutions{grid-template-columns:1fr;}
     .solution{border-right:none; border-bottom:1px solid var(--line);}

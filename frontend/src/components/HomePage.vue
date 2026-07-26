@@ -6,6 +6,7 @@ import StatsBar from './StatsBar.vue'
 import CompanySection from './CompanySection.vue'
 import FlowSection from './FlowSection.vue'
 import ServicesSection from './ServicesSection.vue'
+import MarketStoreSection from './MarketStoreSection.vue'
 import GridSection from './GridSection.vue'
 import CalculatorSection from './CalculatorSection.vue'
 import DashboardSection from './DashboardSection.vue'
@@ -35,6 +36,7 @@ const { siteData, loading, error } = useSiteData()
     <CompanySection :section="siteData.company" />
     <FlowSection :section="siteData.flow" />
     <ServicesSection :section="siteData.services" />
+    <MarketStoreSection v-if="siteData.market_store" :section="siteData.market_store" />
     <GridSection :section="siteData.knowledge" type="GUIDE" />
     <CalculatorSection :section="siteData.calculator" />
     <GridSection :section="siteData.tools" type="TOOL" />

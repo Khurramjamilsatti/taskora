@@ -13,6 +13,7 @@ return [
     'nav' => [
         'links' => [
             ['label' => 'Services', 'href' => '#services'],
+            ['label' => 'Market Store', 'href' => '#market-store'],
             ['label' => 'Knowledge', 'href' => '#knowledge'],
             ['label' => 'For Business', 'href' => '#business'],
             ['label' => 'For Professionals', 'href' => '#professional'],
@@ -31,9 +32,9 @@ return [
             ['label' => 'Explore Services', 'href' => '#services', 'variant' => 'ghost'],
         ],
         'stats' => [
-            ['value' => '100+', 'label' => 'Services'],
+            ['value' => '16+', 'label' => 'Categories'],
+            ['value' => '100+', 'label' => 'Core Services'],
             ['value' => '10,000+', 'label' => 'Verified Pros'],
-            ['value' => '50,000+', 'label' => 'Happy Customers'],
             ['value' => '24/7', 'label' => 'Support'],
         ],
         'phone' => [
@@ -45,9 +46,11 @@ return [
             ],
         ],
         'ticker' => [
-            'Electricians', 'Plumbers', 'Interior Design', 'Facility Management',
-            'Movers & Packers', 'Pest Control', 'Architecture', 'Housing Societies',
-            'AC Repair', 'Construction',
+            'Home Services', 'Construction', 'Architecture', 'Legal',
+            'Chartered Accountants', 'IT & Software', 'Tutors & Education',
+            'Corporate Services', 'Facility Management', 'HR & Recruitment',
+            'Digital Marketing', 'Health & Wellness', 'Event Management',
+            'Logistics & Transport', 'Security Services', 'Insurance & Finance',
         ],
     ],
 
@@ -79,19 +82,82 @@ return [
     ],
 
     'services' => [
-        'tag' => 'Service Directory',
+        'tag' => 'Service Directory — 16 Categories, 100+ Core Services',
         'title' => 'Everything, catalogued.',
-        'description' => 'A structured catalogue of professionals across home, business, and property — each category verified through the same trusted system.',
+        'description' => 'A structured catalogue of professionals across home, business, professional, and property services — every category verified through the same trusted system.',
+        'disclaimer' => 'Taskora does not hold customer investments — financial products are delivered exclusively through licensed banking, insurance, and brokerage partners.',
         'categories' => [
-            ['code' => 'T01 — HOME SERVICES', 'title' => 'Home Services', 'items' => ['House & Deep Cleaning', 'Kitchen & Bathroom Cleaning', 'Sofa, Carpet & Mattress Cleaning', 'Water Tank & Glass Cleaning', 'Laundry, Pest Control, Disinfection']],
-            ['code' => 'T02 — HOME MAINTENANCE', 'title' => 'Home Maintenance', 'items' => ['Electricians & Plumbers', 'Carpenters & Painters', 'AC & Appliance Repair', 'CCTV & Solar Installation', 'Smart Home Automation']],
-            ['code' => 'T03 — ARCHITECTURE & DESIGN', 'title' => 'Architecture & Design', 'items' => ['Architectural & Interior Design', 'Renovation & Landscape Design', 'BOQ & Quantity Surveying', 'Structural & MEP Design', '3D Rendering & BIM Services']],
-            ['code' => 'T04 — CONSTRUCTION', 'title' => 'Construction Services', 'items' => ['Grey Structure & Finishing', 'Waterproofing & Flooring', 'False Ceilings', 'Aluminum & Glass Work', 'Steel Fabrication']],
-            ['code' => 'T05 — BUSINESS & FACILITY', 'title' => 'Business & Facility Management', 'items' => ['Office Cleaning & Janitorial', 'Security & Reception Staff', 'HVAC & Preventive Maintenance', 'Annual Maintenance Contracts', 'Waste Management']],
-            ['code' => 'T06 — HOUSING SOCIETIES', 'title' => 'Housing Society Solutions', 'items' => ['Resident Service Portal', 'Complaint & Vendor Management', 'Visitor Management', 'Community Announcements', 'Emergency Support']],
-            ['code' => 'T07 — COMMERCIAL', 'title' => 'Commercial Solutions', 'items' => ['Malls, Hotels & Restaurants', 'Hospitals & Schools', 'Warehouses & Factories', 'Banks & Government Offices']],
-            ['code' => 'T08 — MOVING & LOGISTICS', 'title' => 'Moving & Logistics', 'items' => ['Packers & Movers', 'Office Relocation', 'Furniture Assembly', 'Storage Solutions']],
-            ['code' => 'T09 — PERSONAL SERVICES', 'title' => 'Personal Services', 'items' => ['Beauticians & Tutors', 'Drivers & Cooks', 'Babysitters & Caregivers', 'Pet Care & Fitness Trainers']],
+            ['code' => 'T01 — HOME SERVICES', 'title' => 'Home Services', 'items' => ['House & Deep Cleaning', 'Plumbing & Electrical', 'AC Repair & Installation', 'Carpentry & Painting', 'Pest Control & Disinfection']],
+            ['code' => 'T02 — CONSTRUCTION & RENOVATION', 'title' => 'Construction & Renovation', 'items' => ['Grey Structure & Finishing', 'Renovation & Remodeling', 'Waterproofing & Flooring', 'Project Management', 'Quantity Surveying & BOQ']],
+            ['code' => 'T03 — ARCHITECTS & INTERIOR DESIGN', 'title' => 'Architects & Interior Design', 'items' => ['Architectural Design', 'Interior & Landscape Design', '3D Rendering & BIM', 'Structural & MEP Design', 'Renovation Consultancy']],
+            ['code' => 'T04 — LEGAL SERVICES', 'title' => 'Legal Services', 'items' => ['Corporate & Contract Law', 'Property & Family Law', 'Legal Documentation', 'Dispute Resolution', 'Company Registration']],
+            ['code' => 'T05 — CHARTERED ACCOUNTANTS & TAXATION', 'title' => 'Chartered Accountants & Taxation', 'items' => ['Tax Filing & Advisory', 'Audit & Assurance', 'SECP Company Registration', 'Bookkeeping & Payroll', 'Financial Consulting']],
+            ['code' => 'T06 — IT SERVICES & SOFTWARE SOLUTIONS', 'title' => 'IT Services & Software Solutions', 'items' => ['Web & App Development', 'Software & AI Solutions', 'Cloud & Cybersecurity', 'IT Support & Networking', 'Data Entry & Analytics']],
+            ['code' => 'T07 — TUTORS & EDUCATION', 'title' => 'Tutors & Education', 'items' => ['Home & Online Tutors', 'Test Preparation', 'Language Coaching', 'Skill Development', 'Computer Training']],
+            ['code' => 'T08 — CORPORATE & BUSINESS SERVICES', 'title' => 'Corporate & Business Services', 'items' => ['Business Setup & Consulting', 'Virtual Assistance', 'Corporate Contracts', 'Market Research', 'Strategy Advisory']],
+            ['code' => 'T09 — FACILITY MANAGEMENT', 'title' => 'Facility Management', 'items' => ['Building Maintenance', 'Janitorial Services', 'Waste Management', 'HVAC & AMC Contracts', 'Vendor Management']],
+            ['code' => 'T10 — HR & RECRUITMENT SERVICES', 'title' => 'HR & Recruitment Services', 'items' => ['Recruitment & Staffing', 'Payroll Management', 'HR Consulting', 'Background Checks', 'Training & Certification']],
+            ['code' => 'T11 — DIGITAL MARKETING & MEDIA', 'title' => 'Digital Marketing & Media', 'items' => ['SEO & Social Media', 'Graphic Design', 'Photography & Videography', 'Branding & Content', 'Paid Advertising']],
+            ['code' => 'T12 — HEALTH & WELLNESS', 'title' => 'Health & Wellness', 'items' => ['Home Nursing & Caregiving', 'Fitness Trainers', 'Beauty & Salon', 'Wellness Consulting', 'Elderly Care']],
+            ['code' => 'T13 — EVENT MANAGEMENT', 'title' => 'Event Management', 'items' => ['Event Planning & Catering', 'Photography & Décor', 'Venue & Vendor Coordination', 'Corporate Events', 'Ticketing & Sponsorship']],
+            ['code' => 'T14 — LOGISTICS & TRANSPORT', 'title' => 'Logistics & Transport', 'items' => ['Packers & Movers', 'Courier & Delivery', 'Vehicle Rentals', 'Warehousing', 'Intercity Transport']],
+            ['code' => 'T15 — SECURITY SERVICES', 'title' => 'Security Services', 'items' => ['CCTV & Alarm Systems', 'Security Guards', 'Access Control', 'Fire Safety', 'Background Verification']],
+            ['code' => 'T16 — INSURANCE, FINANCIAL & INVESTMENT', 'title' => 'Insurance, Financial & Investment Services', 'items' => ['Insurance Marketplace', 'SME Financing', 'Investment Referral (Partner-Only)', 'Savings & Gold Plans', 'Invoice Financing']],
+        ],
+    ],
+
+    'market_store' => [
+        'tag' => 'New — Material Marketplace',
+        'title' => 'Taskora Market Store.',
+        'description' => 'One store, every category. Technicians order verified materials at wholesale prices; customers get transparent, itemized invoices — no marked-up surprises.',
+        'categories' => [
+            'Plumbing', 'Electrical', 'Construction', 'Hardware & Tools', 'Paints & Coatings',
+            'AC & Cooling', 'Cleaning Supplies', 'IT & Electronics', 'Furniture & Decor', 'Automotive',
+            'Laundry Supplies', 'Packaging & Moving', 'Safety & Security', 'Solar & Energy', 'Agriculture',
+            'Office Supplies', 'HR & Uniforms', 'Medical & First Aid', 'Legal & Stationery', 'Marketing & Branding',
+        ],
+        'pricing' => [
+            'tag' => 'Wholesale Price Engine',
+            'title' => 'Transparent, every time.',
+            'headers' => ['Product', 'Market Price', 'Wholesale', 'Taskora Partner Price', 'You Save'],
+            'rows' => [
+                ['product' => 'PVC Pipe', 'market' => 'Rs 480', 'wholesale' => 'Rs 430', 'partner' => 'Rs 415', 'save' => 'Rs 65'],
+                ['product' => 'Paint (20L)', 'market' => 'Rs 11,000', 'wholesale' => 'Rs 10,300', 'partner' => 'Rs 9,950', 'save' => 'Rs 1,050'],
+                ['product' => 'LED Bulb', 'market' => 'Rs 900', 'wholesale' => 'Rs 760', 'partner' => 'Rs 720', 'save' => 'Rs 180'],
+                ['product' => 'Cement Bag', 'market' => 'Rs 1,600', 'wholesale' => 'Rs 1,500', 'partner' => 'Rs 1,450', 'save' => 'Rs 150'],
+            ],
+            'note' => 'Illustrative pricing for demonstration — live prices update continuously from verified distributors.',
+        ],
+        'how_it_works' => [
+            'tag' => 'How It Works',
+            'title' => 'Search to same-day delivery.',
+            'steps' => [
+                ['title' => 'Search', 'description' => 'Find the material you need.'],
+                ['title' => 'Compare', 'description' => 'See market vs. wholesale price.'],
+                ['title' => 'Order', 'description' => 'Place your order securely.'],
+                ['title' => 'Delivered', 'description' => 'Fast delivery to the job site.'],
+                ['title' => 'Use & Grow', 'description' => 'Better margins, repeat business.'],
+            ],
+        ],
+        'audiences' => [
+            [
+                'tag' => 'For Technicians',
+                'title' => 'Order Like A Pro',
+                'description' => 'Compare prices instantly and get materials delivered to the job site.',
+                'items' => ['Verified product catalogue', 'One-click quotation builder', 'Purchase history & invoicing', 'Improved cash flow'],
+            ],
+            [
+                'tag' => 'For Customers',
+                'title' => 'No Hidden Costs',
+                'description' => "See exactly what materials cost — and what you're paying for.",
+                'items' => ['Transparent material pricing', 'Branded, verified products', 'Digital warranties', 'Itemized professional invoices'],
+            ],
+            [
+                'tag' => 'For Suppliers',
+                'title' => 'Reach More Buyers',
+                'description' => 'Sell to thousands of verified technicians and businesses nationwide.',
+                'items' => ['Bulk order access', 'Digital inventory management', 'Nationwide sales reach', 'Demand & trend analytics'],
+            ],
         ],
     ],
 
@@ -256,6 +322,10 @@ return [
             ['label' => 'SaaS & Analytics (Future)', 'percent' => 1, 'color' => '#E6E6E6'],
         ],
         'note' => 'Illustrative planning split based on growth assumptions — not a financial guarantee.',
+        'notes' => [
+            'Illustrative planning split based on growth assumptions — not a financial guarantee.',
+            'Market Store adds further upside not yet in this split: material margin, wholesale subscriptions, and delivery fees.',
+        ],
     ],
 
     'professional' => [
