@@ -80,6 +80,36 @@ const routes = [
         component: ChangePasswordView,
         meta: { title: 'Change password', subtitle: 'Keep your account secure' },
       },
+      {
+        path: 'catalogue',
+        name: 'customer-catalogue',
+        component: CatalogueView,
+        meta: { title: 'Catalogue', subtitle: 'Browse verified professions and services' },
+      },
+      {
+        path: 'support/feedback',
+        name: 'customer-feedback',
+        component: FeedbackFormView,
+        meta: { title: 'Feedback', subtitle: 'Rate a completed service' },
+      },
+      {
+        path: 'support/complaint',
+        name: 'customer-complaint',
+        component: ComplaintFormView,
+        meta: { title: 'Complaint', subtitle: 'Report an issue with a booking' },
+      },
+      {
+        path: 'support/refund',
+        name: 'customer-refund',
+        component: RefundFormView,
+        meta: { title: 'Refund', subtitle: 'Request a refund for a booking' },
+      },
+      {
+        path: 'support/insurance',
+        name: 'customer-insurance',
+        component: InsuranceFormView,
+        meta: { title: 'Insurance', subtitle: 'Submit an insurance claim' },
+      },
     ],
   },
   {
@@ -133,6 +163,42 @@ const routes = [
         component: ChangePasswordView,
         meta: { title: 'Change password', subtitle: 'Keep your account secure' },
       },
+      {
+        path: 'catalogue',
+        name: 'provider-catalogue',
+        component: CatalogueView,
+        meta: { title: 'Catalogue', subtitle: 'Browse verified professions and services' },
+      },
+      {
+        path: 'support/feedback',
+        name: 'provider-feedback',
+        component: FeedbackFormView,
+        meta: { title: 'Feedback', subtitle: 'Share feedback from a completed job' },
+      },
+      {
+        path: 'support/complaint',
+        name: 'provider-complaint',
+        component: ComplaintFormView,
+        meta: { title: 'Complaint', subtitle: 'Report an issue with a booking' },
+      },
+      {
+        path: 'support/refund',
+        name: 'provider-refund',
+        component: RefundFormView,
+        meta: { title: 'Refund', subtitle: 'Request or review a refund' },
+      },
+      {
+        path: 'support/insurance',
+        name: 'provider-insurance',
+        component: InsuranceFormView,
+        meta: { title: 'Insurance', subtitle: 'Submit an insurance claim' },
+      },
+      {
+        path: 'support/company',
+        name: 'provider-company',
+        component: CompanyFormView,
+        meta: { title: 'Company Signup', subtitle: 'Onboard your business on Taskora' },
+      },
     ],
   },
   { path: '/forms/booking', name: 'form-booking', component: BookingFormView },
@@ -158,6 +224,27 @@ router.beforeEach(async (to) => {
 
   if (to.path === '/dashboard' && isAuthenticated.value) {
     return dashboardPathFor(state.user)
+  }
+
+  // Keep support/forms inside the app when signed in
+  if (isAuthenticated.value) {
+    const role = state.user?.role === 'provider' ? 'provider' : 'customer'
+    const formRedirects = {
+      '/forms/feedback': `/dashboard/${role}/support/feedback`,
+      '/forms/complaint': `/dashboard/${role}/support/complaint`,
+      '/forms/refund': `/dashboard/${role}/support/refund`,
+      '/forms/insurance': `/dashboard/${role}/support/insurance`,
+      '/forms/company': role === 'provider'
+        ? '/dashboard/provider/support/company'
+        : '/dashboard/customer',
+      '/forms/booking': role === 'customer'
+        ? '/dashboard/customer/book'
+        : '/dashboard/provider/requests',
+      '/catalogue': `/dashboard/${role}/catalogue`,
+    }
+    if (formRedirects[to.path]) {
+      return formRedirects[to.path]
+    }
   }
 
   const requiresAuth = to.matched.some((r) => r.meta.requiresAuth)

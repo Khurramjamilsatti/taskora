@@ -1,6 +1,18 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { fetchCatalogue } from '../api/client'
+import { useAuth } from '../stores/auth'
+
+const route = useRoute()
+const { state, isAuthenticated } = useAuth()
+const embedded = computed(() => route.path.startsWith('/dashboard/'))
+const bookTo = computed(() => {
+  if (!isAuthenticated.value) return '/login'
+  return state.user?.role === 'provider'
+    ? '/dashboard/provider/requests'
+    : '/dashboard/customer/services'
+})
 
 const data = ref(null)
 const loading = ref(true)
@@ -65,8 +77,8 @@ const filteredCategories = computed(() => {
 </script>
 
 <template>
-  <div class="catalogue-page">
-    <nav class="cat-nav">
+  <div class="catalogue-page" :class="{ 'catalogue-page--embedded': embedded }">
+    <nav v-if="!embedded" class="cat-nav">
       <div class="nav-inner">
         <RouterLink to="/" class="logo">
           <img src="/taskora-icon.png" alt="Taskora" />
@@ -201,16 +213,20 @@ const filteredCategories = computed(() => {
       <div class="cta-strip">
         <h2>{{ data.cta.title }}</h2>
         <div class="btns">
-          <RouterLink :to="data.cta.primary.href" class="btn btn-fill">
-            {{ data.cta.primary.label }}
+          <RouterLink :to="bookTo" class="btn btn-fill">
+            {{ embedded ? (state.user?.role === 'provider' ? 'Go to requests' : 'Book a service') : data.cta.primary.label }}
           </RouterLink>
-          <RouterLink :to="data.cta.secondary.href" class="btn btn-ghost">
+          <RouterLink
+            v-if="!embedded"
+            :to="data.cta.secondary.href"
+            class="btn btn-ghost"
+          >
             {{ data.cta.secondary.label }}
           </RouterLink>
         </div>
       </div>
 
-      <footer class="cat-footer">
+      <footer v-if="!embedded" class="cat-footer">
         © 2026 Taskora (Pvt.) Ltd. · A Trovec Technologies Company — Master Professional Catalogue v1.0
       </footer>
     </template>

@@ -1,5 +1,9 @@
 /* Shared form pages */
 .form-page { background: var(--paper); min-height: 100vh; }
+.form-page--embedded {
+  min-height: 0;
+  background: transparent;
+}
 .form-nav { background: var(--white); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 50; }
 .form-nav .nav-inner { max-width: 980px; margin: 0 auto; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; }
 .form-nav .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
@@ -11,6 +15,35 @@
 .fh h1 { font-size: clamp(28px, 4vw, 42px); color: var(--white); margin-bottom: 12px; }
 .fh p { color: rgba(255,255,255,0.75); max-width: 620px; font-size: 15px; }
 .form-area { padding: 44px 0 90px; max-width: 980px; margin: 0 auto; }
+.form-page--embedded .form-area {
+  padding: 0;
+  max-width: none;
+  margin: 0;
+}
+.form-page--embedded .panel-head h2 {
+  color: var(--db-text, var(--ink));
+}
+.form-page--embedded .panel-head p {
+  color: var(--db-text-muted, rgba(18, 32, 26, 0.6));
+}
+.form-page--embedded .fieldset {
+  background: var(--db-surface, var(--white));
+  border-color: var(--db-border, var(--line));
+}
+.form-page--embedded .fieldset-title {
+  color: var(--db-green, var(--green));
+  border-bottom-color: var(--db-border, var(--line));
+}
+.form-page--embedded .field label {
+  color: var(--db-text, var(--ink));
+}
+.form-page--embedded .field input,
+.form-page--embedded .field select,
+.form-page--embedded .field textarea {
+  background: var(--db-surface-2, var(--paper));
+  border-color: var(--db-border, var(--line));
+  color: var(--db-text, var(--ink));
+}
 .panel-head { margin-bottom: 30px; }
 .panel-head .num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--green); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 8px; }
 .panel-head h2 { font-size: 24px; }

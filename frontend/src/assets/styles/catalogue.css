@@ -566,3 +566,21 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+.catalogue-page--embedded {
+  min-height: 0;
+  background: transparent;
+}
+.catalogue-page--embedded .ph {
+  border-radius: 14px;
+  margin-bottom: 18px;
+}
+.catalogue-page--embedded .wrap {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+.catalogue-page--embedded .cta-strip {
+  border-radius: 14px;
+  margin-bottom: 0;
+}
