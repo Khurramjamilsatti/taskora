@@ -1,5 +1,6 @@
 <script setup>
 import SectionHead from './SectionHead.vue'
+import { RouterLink } from 'vue-router'
 
 defineProps({
   section: Object,
@@ -16,7 +17,7 @@ defineProps({
         <ul>
           <li v-for="item in category.items" :key="item">{{ item }}</li>
         </ul>
-        <span class="more">View all →</span>
+        <RouterLink class="more" to="/catalogue">View all →</RouterLink>
       </div>
     </div>
     <div v-if="section.disclaimer" class="market-flow-note">{{ section.disclaimer }}</div>

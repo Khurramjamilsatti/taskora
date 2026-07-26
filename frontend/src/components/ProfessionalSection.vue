@@ -1,4 +1,6 @@
 <script setup>
+import { RouterLink } from 'vue-router'
+
 defineProps({
   section: Object,
 })
@@ -11,7 +13,7 @@ defineProps({
         <div class="tag">{{ section.tag }}</div>
         <h2>{{ section.title }}</h2>
         <p>{{ section.description }}</p>
-        <a :href="section.cta.href" class="btn btn-gold">{{ section.cta.label }}</a>
+        <RouterLink to="/register/provider" class="btn btn-gold">{{ section.cta.label }}</RouterLink>
       </div>
       <div class="pro-benefits">
         <div v-for="(benefit, index) in section.benefits" :key="benefit" class="pro-benefit">

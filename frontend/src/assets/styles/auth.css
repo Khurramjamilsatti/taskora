@@ -1,0 +1,70 @@
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background: linear-gradient(160deg, var(--green-deep), var(--black));
+}
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--white);
+  border-radius: 12px;
+  padding: 40px 34px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+}
+.auth-card-wide { max-width: 560px; }
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 18px;
+}
+.auth-brand img { width: 34px; height: 34px; }
+.role-pill {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--paper-2);
+  color: var(--green);
+  padding: 6px 10px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.role-pill.provider {
+  background: rgba(212, 175, 55, 0.2);
+  color: #8a6d12;
+}
+.auth-card h1 { font-size: 26px; margin-bottom: 6px; }
+.auth-sub { color: rgba(18, 32, 26, 0.65); margin-bottom: 22px; font-size: 14px; }
+form { display: flex; flex-direction: column; gap: 16px; }
+label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; }
+label em { font-style: normal; font-weight: 400; color: rgba(18, 32, 26, 0.45); }
+input, select, textarea {
+  padding: 12px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  font-size: 15px;
+  font-family: inherit;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--green); }
+small { color: #c0392b; font-weight: 500; }
+button { justify-content: center; margin-top: 6px; }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+.auth-alert {
+  background: #fdecea;
+  color: #b03024;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.auth-foot { margin-top: 20px; font-size: 14px; text-align: center; line-height: 1.7; }
+.auth-foot a { color: var(--green); font-weight: 600; }

@@ -56,6 +56,10 @@ export function fetchSiteData() {
   return request('/site')
 }
 
+export function fetchCatalogue() {
+  return request('/catalogue')
+}
+
 export function calculateEstimate(payload) {
   return request('/estimate', {
     method: 'POST',
@@ -63,11 +67,25 @@ export function calculateEstimate(payload) {
   })
 }
 
-export function apiRegister(payload) {
-  return request('/register', {
+export function apiRegisterCustomer(payload) {
+  return request('/register/customer', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
+}
+
+export function apiRegisterProvider(payload) {
+  return request('/register/provider', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function apiRegister(payload) {
+  const role = payload.role || 'customer'
+  return role === 'provider'
+    ? apiRegisterProvider(payload)
+    : apiRegisterCustomer(payload)
 }
 
 export function apiLogin(payload) {
@@ -83,4 +101,15 @@ export function apiLogout() {
 
 export function apiMe() {
   return request('/me')
+}
+
+export function apiSubmitForm(type, payload) {
+  return request(`/forms/${type}`, {
+    method: 'POST',
+    body: JSON.stringify({ payload }),
+  })
+}
+
+export function apiMyForms() {
+  return request('/my-forms')
 }

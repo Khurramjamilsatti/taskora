@@ -3,7 +3,8 @@ import {
   apiLogin,
   apiLogout,
   apiMe,
-  apiRegister,
+  apiRegisterCustomer,
+  apiRegisterProvider,
   getToken,
   setToken,
 } from '../api/client'
@@ -14,8 +15,17 @@ const state = reactive({
   ready: false,
 })
 
+export function dashboardPathFor(user) {
+  if (user?.role === 'provider') {
+    return '/dashboard/provider'
+  }
+  return '/dashboard/customer'
+}
+
 export function useAuth() {
   const isAuthenticated = computed(() => !!state.token && !!state.user)
+  const isCustomer = computed(() => state.user?.role === 'customer')
+  const isProvider = computed(() => state.user?.role === 'provider')
 
   async function login(credentials) {
     const data = await apiLogin(credentials)
@@ -25,8 +35,16 @@ export function useAuth() {
     return data.user
   }
 
-  async function register(payload) {
-    const data = await apiRegister(payload)
+  async function registerCustomer(payload) {
+    const data = await apiRegisterCustomer(payload)
+    setToken(data.token)
+    state.token = data.token
+    state.user = data.user
+    return data.user
+  }
+
+  async function registerProvider(payload) {
+    const data = await apiRegisterProvider(payload)
     setToken(data.token)
     state.token = data.token
     state.user = data.user
@@ -73,10 +91,14 @@ export function useAuth() {
   return {
     state,
     isAuthenticated,
+    isCustomer,
+    isProvider,
     login,
-    register,
+    registerCustomer,
+    registerProvider,
     logout,
     fetchUser,
     init,
+    dashboardPathFor,
   }
 }

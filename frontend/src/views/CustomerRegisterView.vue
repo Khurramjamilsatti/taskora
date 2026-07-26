@@ -1,17 +1,18 @@
 <script setup>
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useAuth, dashboardPathFor } from '../stores/auth'
 import { ApiError } from '../api/client'
 
 const router = useRouter()
-const route = useRoute()
-const { login } = useAuth()
+const { registerCustomer } = useAuth()
 
 const form = ref({
+  name: '',
   email: '',
+  phone: '',
   password: '',
-  role: route.query.as === 'provider' ? 'provider' : 'customer',
+  password_confirmation: '',
 })
 const errors = ref({})
 const generalError = ref('')
@@ -22,9 +23,8 @@ async function submit() {
   errors.value = {}
   generalError.value = ''
   try {
-    const user = await login(form.value)
-    const redirect = route.query.redirect || dashboardPathFor(user)
-    router.push(redirect)
+    const user = await registerCustomer(form.value)
+    router.push(dashboardPathFor(user))
   } catch (err) {
     if (err instanceof ApiError) {
       errors.value = err.errors
@@ -40,23 +40,22 @@ async function submit() {
 
 <template>
   <div class="auth-page">
-    <div class="auth-card">
+    <div class="auth-card auth-card-wide">
       <RouterLink to="/" class="auth-brand">
         <img src="/taskora-icon.png" alt="Taskora" />
         <span>TASKORA</span>
       </RouterLink>
-      <h1>Sign in</h1>
-      <p class="auth-sub">Access your customer or provider dashboard.</p>
+      <p class="role-pill">Customer signup</p>
+      <h1>Create customer account</h1>
+      <p class="auth-sub">Book services, track jobs, and manage your Taskora dashboard.</p>
 
       <p v-if="generalError" class="auth-alert">{{ generalError }}</p>
 
       <form @submit.prevent="submit">
         <label>
-          <span>I am signing in as</span>
-          <select v-model="form.role">
-            <option value="customer">Customer</option>
-            <option value="provider">Provider</option>
-          </select>
+          <span>Full name</span>
+          <input v-model="form.name" type="text" autocomplete="name" required />
+          <small v-if="errors.name">{{ errors.name[0] }}</small>
         </label>
         <label>
           <span>Email</span>
@@ -64,18 +63,28 @@ async function submit() {
           <small v-if="errors.email">{{ errors.email[0] }}</small>
         </label>
         <label>
+          <span>Mobile <em>(optional)</em></span>
+          <input v-model="form.phone" type="tel" autocomplete="tel" />
+          <small v-if="errors.phone">{{ errors.phone[0] }}</small>
+        </label>
+        <label>
           <span>Password</span>
-          <input v-model="form.password" type="password" autocomplete="current-password" required />
+          <input v-model="form.password" type="password" autocomplete="new-password" required />
           <small v-if="errors.password">{{ errors.password[0] }}</small>
         </label>
+        <label>
+          <span>Confirm password</span>
+          <input v-model="form.password_confirmation" type="password" autocomplete="new-password" required />
+        </label>
         <button type="submit" class="btn btn-gold" :disabled="loading">
-          {{ loading ? 'Signing in…' : 'Sign in' }}
+          {{ loading ? 'Creating…' : 'Create customer account' }}
         </button>
       </form>
 
       <p class="auth-foot">
-        New customer? <RouterLink to="/register/customer">Create account</RouterLink><br />
-        New professional? <RouterLink to="/register/provider">Provider signup</RouterLink>
+        Already have an account? <RouterLink to="/login">Sign in</RouterLink><br />
+        Are you a professional?
+        <RouterLink to="/register/provider">Provider signup</RouterLink>
       </p>
     </div>
   </div>

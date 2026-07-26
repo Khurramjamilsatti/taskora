@@ -20,6 +20,8 @@ defineProps({
         <a v-for="link in nav.links" :key="link.href" :href="link.href">{{ link.label }}</a>
       </div>
       <div class="nav-actions">
+        <RouterLink to="/catalogue" class="btn btn-ghost btn-mini">Catalogue</RouterLink>
+        <RouterLink to="/register/customer" class="btn btn-ghost btn-mini">Join</RouterLink>
         <RouterLink to="/login" class="btn btn-ghost btn-mini">Sign in</RouterLink>
         <a :href="nav.cta.href" class="btn btn-gold btn-mini">{{ nav.cta.label }}</a>
       </div>

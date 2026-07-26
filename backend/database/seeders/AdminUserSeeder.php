@@ -15,6 +15,22 @@ class AdminUserSeeder extends Seeder
             [
                 'name' => env('ADMIN_NAME', 'Taskora Admin'),
                 'password' => env('ADMIN_PASSWORD', 'password'),
+                'role' => 'customer',
+            ],
+        );
+
+        User::firstOrCreate(
+            ['email' => env('PROVIDER_EMAIL', 'pro@taskora.digital')],
+            [
+                'name' => env('PROVIDER_NAME', 'Demo Provider'),
+                'password' => env('PROVIDER_PASSWORD', 'password'),
+                'role' => 'provider',
+                'phone' => '03001234567',
+                'profile' => [
+                    'category' => 'Home Services',
+                    'subcategory' => 'Electrician',
+                    'status' => 'verified',
+                ],
             ],
         );
     }
