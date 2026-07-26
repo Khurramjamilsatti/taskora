@@ -150,8 +150,22 @@ export function apiProviderJobs(status) {
   return request(`/provider/jobs${qs}`)
 }
 
-export function apiAcceptBooking(id, note) {
+export function apiAcceptBooking(id, payload = {}) {
   return request(`/bookings/${id}/accept`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function apiProposeBudget(id, amount, note) {
+  return request(`/bookings/${id}/propose`, {
+    method: 'POST',
+    body: JSON.stringify({ amount, ...(note ? { note } : {}) }),
+  })
+}
+
+export function apiAcceptQuote(id, note) {
+  return request(`/bookings/${id}/accept-quote`, {
     method: 'POST',
     body: JSON.stringify(note ? { note } : {}),
   })

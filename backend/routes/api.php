@@ -28,11 +28,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings', [BookingController::class, 'store']);
     Route::get('/bookings', [BookingController::class, 'mine']);
     Route::get('/bookings/{booking}', [BookingController::class, 'show']);
-    Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
 
     Route::get('/booking-requests', [BookingController::class, 'openRequests']);
     Route::get('/provider/jobs', [BookingController::class, 'myJobs']);
     Route::post('/bookings/{booking}/accept', [BookingController::class, 'accept']);
+    Route::post('/bookings/{booking}/propose', [BookingController::class, 'propose']);
+    Route::post('/bookings/{booking}/accept-quote', [BookingController::class, 'acceptQuote']);
     Route::post('/bookings/{booking}/start', [BookingController::class, 'start']);
     Route::post('/bookings/{booking}/complete', [BookingController::class, 'complete']);
+    Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
 });

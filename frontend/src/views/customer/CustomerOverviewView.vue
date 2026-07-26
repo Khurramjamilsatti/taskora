@@ -65,12 +65,17 @@ const serviceCount = computed(() =>
           </div>
           <div class="db-flow-step">
             <div class="bubble">2</div>
-            <div class="txt">Submit booking details</div>
+            <div class="txt">Negotiate budget</div>
             <div class="arrow">→</div>
           </div>
           <div class="db-flow-step">
             <div class="bubble">3</div>
-            <div class="txt">Track in My Bookings</div>
+            <div class="txt">Accept quotation</div>
+            <div class="arrow">→</div>
+          </div>
+          <div class="db-flow-step">
+            <div class="bubble">4</div>
+            <div class="txt">Confirm completion</div>
           </div>
         </div>
         <div class="db-action-grid" style="margin-top: 18px;">

@@ -78,8 +78,10 @@ onMounted(async () => {
       <div class="db-panel-body">
         <div class="db-flow wrap">
           <div class="db-flow-step"><div class="bubble">1</div><div class="txt">Accept request</div><div class="arrow">→</div></div>
-          <div class="db-flow-step"><div class="bubble">2</div><div class="txt">Start job</div><div class="arrow">→</div></div>
-          <div class="db-flow-step"><div class="bubble">3</div><div class="txt">Complete</div></div>
+          <div class="db-flow-step"><div class="bubble">2</div><div class="txt">Send quotation</div><div class="arrow">→</div></div>
+          <div class="db-flow-step"><div class="bubble">3</div><div class="txt">Customer accepts deal</div><div class="arrow">→</div></div>
+          <div class="db-flow-step"><div class="bubble">4</div><div class="txt">Start job</div><div class="arrow">→</div></div>
+          <div class="db-flow-step"><div class="bubble">5</div><div class="txt">Customer completes</div></div>
         </div>
         <div class="db-action-grid" style="margin-top: 18px;">
           <RouterLink class="db-action" to="/dashboard/provider/requests">

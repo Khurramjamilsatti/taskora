@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { apiMyBookings, apiCancelBooking, ApiError } from '../../api/client'
 import { bookableCategories } from '../../data/bookableServices'
-import { BOOKING_STATUSES, statusClass, statusLabel } from '../../utils/booking'
+import { BOOKING_STATUSES, formatMoney, statusClass, statusLabel } from '../../utils/booking'
 
 const route = useRoute()
 const router = useRouter()
@@ -68,7 +68,7 @@ const filtered = computed(() => {
 })
 
 function canCancel(item) {
-  return ['received', 'assigned'].includes(item.status)
+  return ['received', 'assigned', 'quoted', 'confirmed'].includes(item.status)
 }
 
 async function cancelBooking(item) {
@@ -142,6 +142,7 @@ function openDetail(item) {
                 <th>Reference</th>
                 <th>Service</th>
                 <th>Provider</th>
+                <th>Budget / Deal</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -155,6 +156,12 @@ function openDetail(item) {
                   <small class="muted-line">{{ item.payload?.category }} · {{ item.payload?.city }}</small>
                 </td>
                 <td>{{ item.provider?.name || 'Waiting for provider' }}</td>
+                <td>
+                  <div>{{ formatMoney(item.deal_amount || item.current_offer || item.customer_budget) }}</div>
+                  <small class="muted-line" v-if="item.current_offer_by && !item.deal_amount">
+                    {{ item.current_offer_by }} offer
+                  </small>
+                </td>
                 <td>
                   <span class="db-status" :class="statusClass(item.status)">{{ statusLabel(item.status) }}</span>
                 </td>

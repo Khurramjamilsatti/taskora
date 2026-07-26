@@ -1158,8 +1158,74 @@
 
 .db-shell .bk-timeline {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 10px;
+}
+
+.db-shell .bk-money-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--db-text-muted);
+}
+
+.db-shell .bk-money-pills strong {
+  color: var(--db-text);
+}
+
+.db-shell .bk-money-pills em {
+  font-style: normal;
+  color: var(--db-green);
+  margin-left: 4px;
+}
+
+.db-shell .bk-offers {
+  margin-top: 18px;
+}
+
+.db-shell .bk-offers h3 {
+  font-family: var(--db-display);
+  font-size: 15px;
+  margin: 0 0 10px;
+  color: var(--db-text);
+}
+
+.db-shell .bk-offer-list {
+  display: grid;
+  gap: 8px;
+}
+
+.db-shell .bk-offer {
+  display: grid;
+  grid-template-columns: 140px 120px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--db-border);
+  border-radius: 8px;
+  background: var(--db-surface-2);
+  font-size: 12.5px;
+}
+
+.db-shell .bk-offer strong {
+  color: var(--db-green);
+}
+
+.db-shell .bk-offer span {
+  text-transform: capitalize;
+  font-weight: 700;
+  color: var(--db-text);
+}
+
+.db-shell .bk-offer small {
+  color: var(--db-text-muted);
+}
+
+.db-shell .bk-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--db-text-muted);
 }
 
 .db-shell .bk-step {
@@ -1240,12 +1306,12 @@
 
 .db-shell .db-overlay { display: none; }
 
-@media (max-width: 1200px) {
-  .db-shell .db-layout-a {
+@media (max-width: 1100px) {
+  .db-shell .bk-offer {
     grid-template-columns: 1fr 1fr;
   }
-  .db-shell .db-layout-a > :last-child {
-    grid-column: 1 / -1;
+  .db-shell .bk-timeline {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 

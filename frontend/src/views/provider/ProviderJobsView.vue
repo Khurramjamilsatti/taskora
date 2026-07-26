@@ -4,11 +4,10 @@ import { useRoute } from 'vue-router'
 import {
   apiProviderJobs,
   apiStartBooking,
-  apiCompleteBooking,
   apiCancelBooking,
   ApiError,
 } from '../../api/client'
-import { BOOKING_STATUSES, statusClass, statusLabel } from '../../utils/booking'
+import { BOOKING_STATUSES, formatMoney, statusClass, statusLabel } from '../../utils/booking'
 
 const route = useRoute()
 const jobs = ref([])
@@ -43,7 +42,6 @@ async function runAction(item, action) {
   actionError.value = ''
   try {
     if (action === 'start') await apiStartBooking(item.id)
-    if (action === 'complete') await apiCompleteBooking(item.id)
     if (action === 'cancel') {
       if (!confirm(`Cancel job ${item.reference}?`)) return
       await apiCancelBooking(item.id)
@@ -60,7 +58,7 @@ async function runAction(item, action) {
 <template>
   <div>
     <div v-if="acceptedRef" class="bk-success">
-      <strong>Booking accepted.</strong> Reference: {{ acceptedRef }} — manage it below.
+      <strong>Booking accepted.</strong> Reference: {{ acceptedRef }} — negotiate quotation, then wait for customer acceptance.
     </div>
     <p v-if="actionError" class="auth-alert">{{ actionError }}</p>
 
@@ -68,7 +66,7 @@ async function runAction(item, action) {
       <div class="db-panel-head">
         <div>
           <h2>My jobs</h2>
-          <p>Accepted bookings — start work, complete, or cancel if needed</p>
+          <p>Quote → customer accepts deal → you start. Customer marks completed.</p>
         </div>
         <div class="bk-row-actions">
           <select v-model="filterStatus" class="bk-input" style="width: auto;">
@@ -93,17 +91,17 @@ async function runAction(item, action) {
           <table class="db-dense-table">
             <thead>
               <tr>
-                <th>Accepted</th>
+                <th>Updated</th>
                 <th>Reference</th>
                 <th>Customer</th>
-                <th>Service</th>
+                <th>Service / Deal</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="item in jobs" :key="item.id">
-                <td>{{ item.accepted_at ? new Date(item.accepted_at).toLocaleString() : '—' }}</td>
+                <td>{{ new Date(item.updated_at || item.created_at).toLocaleString() }}</td>
                 <td>{{ item.reference }}</td>
                 <td>
                   <div>{{ item.payload?.name || item.customer?.name || '—' }}</div>
@@ -111,14 +109,17 @@ async function runAction(item, action) {
                 </td>
                 <td>
                   <div>{{ item.payload?.service || '—' }}</div>
-                  <small class="muted-line">{{ item.payload?.category }} · {{ item.payload?.city }}</small>
+                  <small class="muted-line">
+                    Offer {{ formatMoney(item.current_offer) }}
+                    · Deal {{ formatMoney(item.deal_amount) }}
+                  </small>
                 </td>
                 <td><span class="db-status" :class="statusClass(item.status)">{{ statusLabel(item.status) }}</span></td>
                 <td>
                   <div class="bk-row-actions">
                     <RouterLink class="db-btn db-btn-ghost" :to="`/dashboard/provider/jobs/${item.id}`">View</RouterLink>
                     <button
-                      v-if="item.status === 'assigned'"
+                      v-if="item.status === 'confirmed'"
                       type="button"
                       class="db-btn db-btn-primary"
                       :disabled="actingId === item.id"
@@ -127,16 +128,7 @@ async function runAction(item, action) {
                       Start
                     </button>
                     <button
-                      v-if="item.status === 'in_progress'"
-                      type="button"
-                      class="db-btn db-btn-gold"
-                      :disabled="actingId === item.id"
-                      @click="runAction(item, 'complete')"
-                    >
-                      Complete
-                    </button>
-                    <button
-                      v-if="['assigned'].includes(item.status)"
+                      v-if="['assigned', 'quoted', 'confirmed'].includes(item.status)"
                       type="button"
                       class="db-btn db-btn-ghost"
                       :disabled="actingId === item.id"

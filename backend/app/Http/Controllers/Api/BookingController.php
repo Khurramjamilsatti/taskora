@@ -26,13 +26,27 @@ class BookingController extends Controller
             'payload.service' => ['required', 'string', 'max:160'],
             'payload.city' => ['required', 'string', 'max:80'],
             'payload.address' => ['required', 'string', 'max:255'],
+            'payload.budget' => ['nullable', 'numeric', 'min:0'],
         ])['payload'];
+
+        $budget = isset($payload['budget']) && $payload['budget'] !== ''
+            ? (float) $payload['budget']
+            : null;
 
         $booking = FormSubmission::create([
             'user_id' => $user->id,
             'type' => 'booking',
             'reference' => 'B-'.now()->format('ymd').'-'.Str::upper(Str::random(6)),
             'payload' => $payload,
+            'customer_budget' => $budget,
+            'current_offer' => $budget,
+            'current_offer_by' => $budget !== null ? 'customer' : null,
+            'offers' => $budget !== null ? [[
+                'by' => 'customer',
+                'amount' => $budget,
+                'note' => 'Initial customer budget',
+                'at' => now()->toIso8601String(),
+            ]] : [],
             'status' => FormSubmission::STATUS_RECEIVED,
         ]);
 
@@ -131,7 +145,6 @@ class BookingController extends Controller
             })->values();
         }
 
-        // Prefer provider category matches first when profile has one
         $providerCategory = $user->profile['category'] ?? null;
         if ($providerCategory) {
             $items = $items->sortByDesc(function (FormSubmission $item) use ($providerCategory) {
@@ -189,19 +202,148 @@ class BookingController extends Controller
 
         $data = $request->validate([
             'note' => ['nullable', 'string', 'max:500'],
+            'amount' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $booking->update([
+        $updates = [
             'provider_id' => $user->id,
             'status' => FormSubmission::STATUS_ASSIGNED,
             'provider_note' => $data['note'] ?? null,
             'accepted_at' => now(),
+        ];
+
+        if (isset($data['amount'])) {
+            $amount = (float) $data['amount'];
+            $offers = $booking->offers ?? [];
+            $offers[] = [
+                'by' => 'provider',
+                'amount' => $amount,
+                'note' => $data['note'] ?? 'Initial provider quotation',
+                'at' => now()->toIso8601String(),
+            ];
+            $updates['offers'] = $offers;
+            $updates['current_offer'] = $amount;
+            $updates['current_offer_by'] = 'provider';
+            $updates['status'] = FormSubmission::STATUS_QUOTED;
+            $updates['quoted_at'] = now();
+        }
+
+        $booking->update($updates);
+        $booking->load(['user', 'provider']);
+
+        return response()->json([
+            'message' => isset($data['amount'])
+                ? 'Booking accepted with quotation.'
+                : 'Booking accepted. You can now negotiate the budget.',
+            'booking' => $booking->toBookingArray(),
+        ]);
+    }
+
+    public function propose(Request $request, FormSubmission $booking): JsonResponse
+    {
+        if (! $booking->isBooking()) {
+            return response()->json(['message' => 'Not a booking.'], 404);
+        }
+
+        $user = $request->user();
+        $isCustomer = $user->isCustomer() && $booking->user_id === $user->id;
+        $isProvider = $user->isProvider() && $booking->provider_id === $user->id;
+
+        if (! $isCustomer && ! $isProvider) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        if (! $booking->canNegotiate()) {
+            return response()->json(['message' => 'Budget can only be negotiated after a provider is assigned and before the deal is finalized.'], 422);
+        }
+
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'min:0'],
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $by = $isCustomer ? 'customer' : 'provider';
+        $amount = (float) $data['amount'];
+        $offers = $booking->offers ?? [];
+        $offers[] = [
+            'by' => $by,
+            'amount' => $amount,
+            'note' => $data['note'] ?? ($by === 'provider' ? 'Provider quotation' : 'Customer budget update'),
+            'at' => now()->toIso8601String(),
+        ];
+
+        $updates = [
+            'offers' => $offers,
+            'current_offer' => $amount,
+            'current_offer_by' => $by,
+            'provider_note' => $data['note'] ?? $booking->provider_note,
+        ];
+
+        if ($by === 'customer') {
+            $updates['customer_budget'] = $amount;
+            $payload = $booking->payload ?? [];
+            $payload['budget'] = $amount;
+            $updates['payload'] = $payload;
+            // Customer counter keeps negotiation open
+            $updates['status'] = FormSubmission::STATUS_ASSIGNED;
+        } else {
+            $updates['status'] = FormSubmission::STATUS_QUOTED;
+            $updates['quoted_at'] = now();
+        }
+
+        $booking->update($updates);
+        $booking->load(['user', 'provider']);
+
+        return response()->json([
+            'message' => $by === 'provider'
+                ? 'Quotation sent to customer.'
+                : 'Budget updated. Waiting for provider quotation.',
+            'booking' => $booking->toBookingArray(),
+        ]);
+    }
+
+    public function acceptQuote(Request $request, FormSubmission $booking): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! $user->isCustomer() || $booking->user_id !== $user->id) {
+            return response()->json(['message' => 'Only the customer can accept a provider quotation.'], 403);
+        }
+
+        if (! $booking->isBooking()) {
+            return response()->json(['message' => 'Not a booking.'], 404);
+        }
+
+        if ($booking->status !== FormSubmission::STATUS_QUOTED
+            || $booking->current_offer_by !== 'provider'
+            || $booking->current_offer === null) {
+            return response()->json(['message' => 'No provider quotation is waiting for acceptance.'], 422);
+        }
+
+        $data = $request->validate([
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $offers = $booking->offers ?? [];
+        $offers[] = [
+            'by' => 'customer',
+            'amount' => (float) $booking->current_offer,
+            'note' => $data['note'] ?? 'Customer accepted provider quotation',
+            'at' => now()->toIso8601String(),
+            'action' => 'accepted',
+        ];
+
+        $booking->update([
+            'status' => FormSubmission::STATUS_CONFIRMED,
+            'deal_amount' => $booking->current_offer,
+            'deal_accepted_at' => now(),
+            'offers' => $offers,
         ]);
 
         $booking->load(['user', 'provider']);
 
         return response()->json([
-            'message' => 'Booking accepted.',
+            'message' => 'Deal finalized. Provider can now start the job.',
             'booking' => $booking->toBookingArray(),
         ]);
     }
@@ -211,7 +353,7 @@ class BookingController extends Controller
         return $this->providerTransition(
             $request,
             $booking,
-            FormSubmission::STATUS_ASSIGNED,
+            FormSubmission::STATUS_CONFIRMED,
             FormSubmission::STATUS_IN_PROGRESS,
             ['started_at' => now()],
             'Job started.',
@@ -220,14 +362,36 @@ class BookingController extends Controller
 
     public function complete(Request $request, FormSubmission $booking): JsonResponse
     {
-        return $this->providerTransition(
-            $request,
-            $booking,
-            FormSubmission::STATUS_IN_PROGRESS,
-            FormSubmission::STATUS_COMPLETED,
-            ['completed_at' => now()],
-            'Job completed.',
-        );
+        $user = $request->user();
+
+        if (! $booking->isBooking()) {
+            return response()->json(['message' => 'Not a booking.'], 404);
+        }
+
+        if (! $user->isCustomer() || $booking->user_id !== $user->id) {
+            return response()->json(['message' => 'Only the customer can mark a job as completed.'], 403);
+        }
+
+        if ($booking->status !== FormSubmission::STATUS_IN_PROGRESS) {
+            return response()->json(['message' => 'Job must be in progress before it can be completed.'], 422);
+        }
+
+        $data = $request->validate([
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $booking->update([
+            'status' => FormSubmission::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'provider_note' => $data['note'] ?? $booking->provider_note,
+        ]);
+
+        $booking->load(['user', 'provider']);
+
+        return response()->json([
+            'message' => 'Job marked as completed.',
+            'booking' => $booking->toBookingArray(),
+        ]);
     }
 
     public function cancel(Request $request, FormSubmission $booking): JsonResponse
@@ -248,6 +412,8 @@ class BookingController extends Controller
         if (! in_array($booking->status, [
             FormSubmission::STATUS_RECEIVED,
             FormSubmission::STATUS_ASSIGNED,
+            FormSubmission::STATUS_QUOTED,
+            FormSubmission::STATUS_CONFIRMED,
         ], true)) {
             return response()->json(['message' => 'This booking can no longer be cancelled.'], 422);
         }
