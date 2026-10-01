@@ -8,7 +8,7 @@ Thumbs.db
 /.env
 
 # Build artifacts (also ignored inside sub-projects)
-frontend/dist/
+#frontend/dist/
 frontend/node_modules/
 backend/vendor/
 backend/.env
