@@ -30,7 +30,7 @@ const { siteData, loading, error } = useSiteData()
   <div v-else-if="error" class="loading-state error">Failed to load site data. Is the Laravel API running?</div>
   <template v-else-if="siteData">
     <AppNav :nav="siteData.nav" />
-    <PromoStrip :text="siteData.promo.text" />
+    <PromoStrip v-if="siteData.promo?.text" :text="siteData.promo.text" />
     <HeroSection :hero="siteData.hero" />
     <StatsBar :stats="siteData.stats_bar" />
     <CompanySection :section="siteData.company" />

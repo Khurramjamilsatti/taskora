@@ -10,11 +10,14 @@ class SiteContentService
 {
     public function all(): array
     {
-        $sections = SiteSection::query()
+        $stored = SiteSection::query()
             ->orderBy('id')
             ->get()
+            ->filter(fn (SiteSection $section) => is_array($section->payload) && $section->payload !== [])
             ->mapWithKeys(fn (SiteSection $section) => [$section->key => $section->payload])
             ->all();
+
+        $sections = array_replace(config('taskora', []), $stored);
 
         $sections['calculator'] = $this->buildCalculatorSection($sections['calculator'] ?? []);
 

@@ -12,8 +12,8 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
 
-# Same-origin API: nginx proxies /api to Laravel in the same container
-ENV VITE_API_URL=/api
+# Frontend calls the API host. Laravel routes are prefixed with /api.
+ENV VITE_API_URL=https://app.taskora.digital/api
 RUN npm run build
 
 # ---------- Stage 2: Composer dependencies ----------
